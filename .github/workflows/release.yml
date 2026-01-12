@@ -162,7 +162,7 @@ jobs:
       - name: Build standalone (Unix)
         if: matrix.os != 'windows'
         run: |
-          pyinstaller --onefile --name tfo-mcp-${{ matrix.os }}-${{ matrix.arch }} \
+          pyinstaller --onefile --name telemetryflow-python-mcp-${{ matrix.os }}-${{ matrix.arch }} \
             --hidden-import tfo_mcp \
             --collect-data tfo_mcp \
             src/tfo_mcp/main.py
@@ -170,7 +170,7 @@ jobs:
       - name: Build standalone (Windows)
         if: matrix.os == 'windows'
         run: |
-          pyinstaller --onefile --name tfo-mcp-${{ matrix.os }}-${{ matrix.arch }} `
+          pyinstaller --onefile --name telemetryflow-python-mcp-${{ matrix.os }}-${{ matrix.arch }} `
             --hidden-import tfo_mcp `
             --collect-data tfo_mcp `
             src/tfo_mcp/main.py
@@ -206,24 +206,24 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          PKG_DIR=tfo-mcp_${VERSION}_${{ matrix.arch }}
+          PKG_DIR=telemetryflow-python-mcp_${VERSION}_${{ matrix.arch }}
           mkdir -p ${PKG_DIR}/DEBIAN
           mkdir -p ${PKG_DIR}/usr/local/bin
 
           # Copy binaries
-          cp dist/tfo-mcp-linux-${{ matrix.arch }} \
-             ${PKG_DIR}/usr/local/bin/tfo-mcp
-          chmod 755 ${PKG_DIR}/usr/local/bin/tfo-mcp
+          cp dist/telemetryflow-python-mcp-linux-${{ matrix.arch }} \
+             ${PKG_DIR}/usr/local/bin/telemetryflow-python-mcp
+          chmod 755 ${PKG_DIR}/usr/local/bin/telemetryflow-python-mcp
 
       - name: Create DEB control files
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          PKG_DIR=tfo-mcp_${VERSION}_${{ matrix.arch }}
+          PKG_DIR=telemetryflow-python-mcp_${VERSION}_${{ matrix.arch }}
 
           # Control file
           cat > ${PKG_DIR}/DEBIAN/control << EOF
-          Package: tfo-mcp
+          Package: telemetryflow-python-mcp
           Version: ${VERSION}
           Section: devel
           Priority: optional
@@ -231,7 +231,7 @@ jobs:
           Maintainer: ${{ env.VENDOR }} <${{ env.MAINTAINER }}>
           Description: ${{ env.DESCRIPTION }}
            ${{ env.PRODUCT_NAME }} provides MCP server for Claude API integration:
-           - tfo-mcp: MCP server with DDD/CQRS architecture
+           - telemetryflow-python-mcp: MCP server with DDD/CQRS architecture
           Homepage: ${{ env.HOMEPAGE }}
           EOF
 
@@ -242,10 +242,10 @@ jobs:
           echo "TelemetryFlow Python MCP Server installed successfully!"
           echo ""
           echo "Available commands:"
-          echo "  tfo-mcp serve  - Start the MCP server"
-          echo "  tfo-mcp --help - Show help"
+          echo "  telemetryflow-python-mcp serve  - Start the MCP server"
+          echo "  telemetryflow-python-mcp --help - Show help"
           echo ""
-          echo "Run 'tfo-mcp --help' to get started."
+          echo "Run 'telemetryflow-python-mcp --help' to get started."
           exit 0
           EOF
           chmod 755 ${PKG_DIR}/DEBIAN/postinst
@@ -254,7 +254,7 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          PKG_DIR=tfo-mcp_${VERSION}_${{ matrix.arch }}
+          PKG_DIR=telemetryflow-python-mcp_${VERSION}_${{ matrix.arch }}
           dpkg-deb --build ${PKG_DIR}
           mkdir -p packages
           mv ${PKG_DIR}.deb packages/
@@ -287,12 +287,12 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          PKG_DIR=tfo-mcp-${VERSION}-windows-amd64
+          PKG_DIR=telemetryflow-python-mcp-${VERSION}-windows-amd64
           mkdir -p ${PKG_DIR}
 
           # Copy binaries
-          cp dist/tfo-mcp-windows-amd64.exe ${PKG_DIR}/tfo-mcp.exe 2>/dev/null || \
-          cp dist/tfo-mcp-windows-amd64 ${PKG_DIR}/tfo-mcp.exe
+          cp dist/telemetryflow-python-mcp-windows-amd64.exe ${PKG_DIR}/telemetryflow-python-mcp.exe 2>/dev/null || \
+          cp dist/telemetryflow-python-mcp-windows-amd64 ${PKG_DIR}/telemetryflow-python-mcp.exe
 
           # Copy docs
           cp README.md "${PKG_DIR}/" 2>/dev/null || true
@@ -305,14 +305,14 @@ jobs:
 
           Installation:
           1. Run PowerShell as Administrator
-          2. Copy tfo-mcp.exe to a directory in your PATH
+          2. Copy telemetryflow-python-mcp.exe to a directory in your PATH
 
           Or install via pip:
-          pip install tfo-mcp
+          pip install telemetryflow-python-mcp
 
           Available Commands:
-          - tfo-mcp.exe serve  - Start the MCP server
-          - tfo-mcp.exe --help - Show help
+          - telemetryflow-python-mcp.exe serve  - Start the MCP server
+          - telemetryflow-python-mcp.exe --help - Show help
 
           Documentation: https://docs.telemetryflow.id
           Support: support@telemetryflow.id
@@ -321,13 +321,13 @@ jobs:
           EOF
 
           # Create ZIP
-          zip -r tfo-mcp-${VERSION}-windows-amd64.zip ${PKG_DIR}
+          zip -r telemetryflow-python-mcp-${VERSION}-windows-amd64.zip ${PKG_DIR}
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-amd64
-          path: tfo-mcp-*.zip
+          path: telemetryflow-python-mcp-*.zip
           retention-days: 1
 
   # ===========================================================================
@@ -359,12 +359,12 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          PKG_DIR=tfo-mcp-${VERSION}-darwin-${{ matrix.arch }}
+          PKG_DIR=telemetryflow-python-mcp-${VERSION}-darwin-${{ matrix.arch }}
           mkdir -p ${PKG_DIR}
 
           # Copy binaries
-          cp dist/tfo-mcp-darwin-${{ matrix.arch }} ${PKG_DIR}/tfo-mcp
-          chmod +x ${PKG_DIR}/tfo-mcp
+          cp dist/telemetryflow-python-mcp-darwin-${{ matrix.arch }} ${PKG_DIR}/telemetryflow-python-mcp
+          chmod +x ${PKG_DIR}/telemetryflow-python-mcp
 
           # Copy docs
           cp README.md "${PKG_DIR}/" 2>/dev/null || true
@@ -376,10 +376,10 @@ jobs:
           set -e
           INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
           echo "Installing TelemetryFlow Python MCP Server to ${INSTALL_DIR}..."
-          sudo cp tfo-mcp "${INSTALL_DIR}/"
-          sudo chmod +x "${INSTALL_DIR}/tfo-mcp"
+          sudo cp telemetryflow-python-mcp "${INSTALL_DIR}/"
+          sudo chmod +x "${INSTALL_DIR}/telemetryflow-python-mcp"
           echo "Installation complete!"
-          echo "Run 'tfo-mcp --help' to get started."
+          echo "Run 'telemetryflow-python-mcp --help' to get started."
           EOF
           chmod +x ${PKG_DIR}/install.sh
 
@@ -395,11 +395,11 @@ jobs:
           3. Run: ./install.sh
 
           Or install via pip:
-          pip install tfo-mcp
+          pip install telemetryflow-python-mcp
 
           Available Commands:
-          - tfo-mcp serve  - Start the MCP server
-          - tfo-mcp --help - Show help
+          - telemetryflow-python-mcp serve  - Start the MCP server
+          - telemetryflow-python-mcp --help - Show help
 
           Documentation: https://docs.telemetryflow.id
           Support: support@telemetryflow.id
@@ -408,13 +408,13 @@ jobs:
           EOF
 
           # Create tarball
-          tar -czvf tfo-mcp-${VERSION}-darwin-${{ matrix.arch }}.tar.gz ${PKG_DIR}
+          tar -czvf telemetryflow-python-mcp-${VERSION}-darwin-${{ matrix.arch }}.tar.gz ${PKG_DIR}
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}
-          path: tfo-mcp-*.tar.gz
+          path: telemetryflow-python-mcp-*.tar.gz
           retention-days: 1
 
   # ===========================================================================
@@ -427,7 +427,7 @@ jobs:
     if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_pypi == 'true') }}
     environment:
       name: pypi
-      url: https://pypi.org/p/tfo-mcp
+      url: https://pypi.org/p/telemetryflow-python-mcp
     steps:
       - name: Download package
         uses: actions/download-artifact@v4
@@ -547,7 +547,7 @@ jobs:
 
             **Via pip (recommended):**
             ```bash
-            pip install tfo-mcp==${{ needs.prepare.outputs.version }}
+            pip install telemetryflow-python-mcp==${{ needs.prepare.outputs.version }}
             ```
 
             ### Features
@@ -574,12 +574,12 @@ jobs:
 
             **Start MCP server:**
             ```bash
-            tfo-mcp serve
+            telemetryflow-python-mcp serve
             ```
 
             **Show help:**
             ```bash
-            tfo-mcp --help
+            telemetryflow-python-mcp --help
             ```
 
             ### Verification
@@ -611,7 +611,7 @@ jobs:
           echo "| **Build Time** | ${{ needs.prepare.outputs.build_time }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### MCP Server" >> $GITHUB_STEP_SUMMARY
-          echo "- tfo-mcp" >> $GITHUB_STEP_SUMMARY
+          echo "- telemetryflow-python-mcp" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Packages" >> $GITHUB_STEP_SUMMARY
           echo "| Platform | Formats |" >> $GITHUB_STEP_SUMMARY
