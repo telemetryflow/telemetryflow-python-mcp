@@ -10,12 +10,45 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
+      args:
+        - TELEMETRYFLOW_MCP_VERSION=${TELEMETRYFLOW_MCP_VERSION:-1.1.2}
     container_name: tfo-mcp
     restart: unless-stopped
     environment:
+      # Claude API
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - TELEMETRYFLOW_MCP_LOG_LEVEL=${LOG_LEVEL:-info}
-      - TELEMETRYFLOW_MCP_SERVER_DEBUG=${DEBUG:-false}
+      # Server Configuration
+      - TELEMETRYFLOW_MCP_SERVER_HOST=${TELEMETRYFLOW_MCP_SERVER_HOST:-localhost}
+      - TELEMETRYFLOW_MCP_SERVER_PORT=${TELEMETRYFLOW_MCP_SERVER_PORT:-8080}
+      - TELEMETRYFLOW_MCP_SERVER_TRANSPORT=${TELEMETRYFLOW_MCP_SERVER_TRANSPORT:-stdio}
+      - TELEMETRYFLOW_MCP_DEBUG=${TELEMETRYFLOW_MCP_DEBUG:-false}
+      # Logging
+      - TELEMETRYFLOW_MCP_LOG_LEVEL=${TELEMETRYFLOW_MCP_LOG_LEVEL:-info}
+      - TELEMETRYFLOW_MCP_LOG_FORMAT=${TELEMETRYFLOW_MCP_LOG_FORMAT:-json}
+      # Redis/Cache
+      - TELEMETRYFLOW_MCP_REDIS_URL=redis://redis:6379
+      - TELEMETRYFLOW_MCP_CACHE_ENABLED=${TELEMETRYFLOW_MCP_CACHE_ENABLED:-true}
+      - TELEMETRYFLOW_MCP_CACHE_TTL=${TELEMETRYFLOW_MCP_CACHE_TTL:-300}
+      # Queue
+      - TELEMETRYFLOW_MCP_QUEUE_ENABLED=${TELEMETRYFLOW_MCP_QUEUE_ENABLED:-true}
+      - TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY=${TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY:-5}
+      # Database
+      - TELEMETRYFLOW_MCP_POSTGRES_URL=postgres://telemetryflow:${POSTGRES_PASSWORD:-telemetryflow}@postgres:5432/tfo_mcp?sslmode=disable
+      - TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS=${TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS:-25}
+      - TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS=${TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS:-5}
+      # Analytics
+      - TELEMETRYFLOW_MCP_CLICKHOUSE_URL=clickhouse://clickhouse:9000/tfo_mcp_analytics
+      # Telemetry
+      - TELEMETRYFLOW_MCP_TELEMETRY_ENABLED=${TELEMETRYFLOW_MCP_TELEMETRY_ENABLED:-true}
+      - TELEMETRYFLOW_MCP_TELEMETRY_BACKEND=${TELEMETRYFLOW_MCP_TELEMETRY_BACKEND:-telemetryflow}
+      - TELEMETRYFLOW_MCP_OTLP_ENDPOINT=${TELEMETRYFLOW_MCP_OTLP_ENDPOINT:-localhost:4317}
+      - TELEMETRYFLOW_MCP_SERVICE_NAME=${TELEMETRYFLOW_MCP_SERVICE_NAME:-telemetryflow-mcp}
+      # TelemetryFlow SDK
+      - TELEMETRYFLOW_API_KEY=${TELEMETRYFLOW_API_KEY:-}
+      - TELEMETRYFLOW_ENDPOINT=${TELEMETRYFLOW_ENDPOINT:-api.telemetryflow.id:4317}
+      - TELEMETRYFLOW_SERVICE_NAME=${TELEMETRYFLOW_SERVICE_NAME:-telemetryflow-mcp}
+      - TELEMETRYFLOW_SERVICE_VERSION=${TELEMETRYFLOW_SERVICE_VERSION:-1.1.2}
+      - TELEMETRYFLOW_ENVIRONMENT=${TELEMETRYFLOW_ENVIRONMENT:-production}
     volumes:
       - ./configs:/app/configs:ro
     stdin_open: true
@@ -37,6 +70,8 @@ services:
     container_name: tfo-mcp-redis
     restart: unless-stopped
     command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -58,8 +93,8 @@ services:
     restart: unless-stopped
     command: ["--jetstream", "--store_dir=/data"]
     ports:
-      - "4222:4222"
-      - "8222:8222"
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
     volumes:
       - nats-data:/data
     networks:
@@ -79,17 +114,19 @@ services:
     image: postgres:16-alpine
     container_name: tfo-mcp-postgres
     restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: telemetryflow
+      POSTGRES_USER: ${POSTGRES_USER:-telemetryflow}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-telemetryflow}
-      POSTGRES_DB: tfo_mcp
+      POSTGRES_DB: ${POSTGRES_DB:-tfo_mcp}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./migrations/postgres:/docker-entrypoint-initdb.d:ro
     networks:
       - tfo-mcp-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U telemetryflow -d tfo_mcp"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-telemetryflow} -d ${POSTGRES_DB:-tfo_mcp}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -103,10 +140,13 @@ services:
     image: clickhouse/clickhouse-server:24-alpine
     container_name: tfo-mcp-clickhouse
     restart: unless-stopped
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
     environment:
-      CLICKHOUSE_USER: telemetryflow
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-telemetryflow}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-telemetryflow}
-      CLICKHOUSE_DB: tfo_mcp_analytics
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-tfo_mcp_analytics}
     volumes:
       - clickhouse-data:/var/lib/clickhouse
       - ./migrations/clickhouse:/docker-entrypoint-initdb.d:ro
@@ -121,6 +161,83 @@ services:
       - full
       - analytics
 
+  # ============================================
+  # OpenTelemetry Collector (Optional)
+  # ============================================
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: tfo-mcp-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "8888:8888"
+    volumes:
+      - ./configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    networks:
+      - tfo-mcp-network
+    profiles:
+      - observability
+
+  # ============================================
+  # Jaeger (Optional - for tracing)
+  # ============================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: tfo-mcp-jaeger
+    restart: unless-stopped
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "14268:14268"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - tfo-mcp-network
+    profiles:
+      - observability
+
+  # ============================================
+  # Prometheus (Optional - for metrics)
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tfo-mcp-prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./configs/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - tfo-mcp-network
+    profiles:
+      - observability
+
+  # ============================================
+  # Grafana (Optional - for dashboards)
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tfo-mcp-grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - tfo-mcp-network
+    profiles:
+      - observability
+
 networks:
   tfo-mcp-network:
     driver: bridge
@@ -130,3 +247,5 @@ volumes:
   nats-data:
   postgres-data:
   clickhouse-data:
+  prometheus-data:
+  grafana-data:

@@ -11,6 +11,62 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class CacheConfig(BaseSettings):
+    """Cache (Redis) configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="TELEMETRYFLOW_MCP_",
+        extra="ignore",
+    )
+
+    redis_url: str = Field(default="redis://localhost:6379", description="Redis connection URL")
+    cache_enabled: bool = Field(default=True, description="Enable caching")
+    cache_ttl: int = Field(default=300, description="Cache TTL in seconds")
+
+
+class QueueConfig(BaseSettings):
+    """Queue (NATS) configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="TELEMETRYFLOW_MCP_",
+        extra="ignore",
+    )
+
+    queue_enabled: bool = Field(default=True, description="Enable queue processing")
+    queue_concurrency: int = Field(default=5, ge=1, le=100, description="Queue concurrency")
+    nats_url: str = Field(default="nats://localhost:4222", description="NATS connection URL")
+
+
+class DatabaseConfig(BaseSettings):
+    """Database (PostgreSQL) configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="TELEMETRYFLOW_MCP_",
+        extra="ignore",
+    )
+
+    postgres_url: str = Field(
+        default="postgres://telemetryflow:telemetryflow@localhost:5432/tfo_mcp?sslmode=disable",
+        description="PostgreSQL connection URL",
+    )
+    postgres_max_conns: int = Field(default=25, ge=1, le=100, description="Maximum connections")
+    postgres_min_conns: int = Field(default=5, ge=1, le=50, description="Minimum connections")
+
+
+class AnalyticsConfig(BaseSettings):
+    """Analytics (ClickHouse) configuration."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="TELEMETRYFLOW_MCP_",
+        extra="ignore",
+    )
+
+    clickhouse_url: str = Field(
+        default="clickhouse://localhost:9000/tfo_mcp_analytics",
+        description="ClickHouse connection URL",
+    )
+
+
 class ServerConfig(BaseSettings):
     """Server configuration."""
 
@@ -88,6 +144,24 @@ class LoggingConfig(BaseSettings):
     output: str = Field(default="stderr", description="Log output (stderr, stdout, file path)")
 
 
+class TelemetryMCPConfig(BaseSettings):
+    """MCP-level telemetry configuration (TELEMETRYFLOW_MCP_TELEMETRY_* prefix)."""
+
+    model_config = SettingsConfigDict(
+        env_prefix="TELEMETRYFLOW_MCP_TELEMETRY_",
+        extra="ignore",
+    )
+
+    enabled: bool = Field(default=True, description="Enable telemetry")
+    backend: str = Field(
+        default="telemetryflow", description="Telemetry backend (telemetryflow, otel)"
+    )
+    otlp_endpoint: str = Field(
+        default="localhost:4317", description="OTLP endpoint for legacy integration"
+    )
+    service_name: str = Field(default="telemetryflow-mcp", description="Service name for OTEL")
+
+
 class TelemetryConfig(BaseSettings):
     """Telemetry configuration using TelemetryFlow Python SDK."""
 
@@ -102,7 +176,8 @@ class TelemetryConfig(BaseSettings):
     service_namespace: str = Field(default="telemetryflow", description="Service namespace")
     environment: str = Field(default="production", description="Deployment environment")
 
-    # API credentials
+    # API credentials - supports both single key (Go SDK) and split keys (Python SDK)
+    api_key: str = Field(default="", description="TelemetryFlow API key (Go SDK compatibility)")
     api_key_id: str = Field(default="", description="TelemetryFlow API key ID (tfk_*)")
     api_key_secret: str = Field(default="", description="TelemetryFlow API key secret (tfs_*)")
 
@@ -131,6 +206,14 @@ class TelemetryConfig(BaseSettings):
     # Rate limiting
     rate_limit: int = Field(default=1000, description="Rate limit (requests/minute)")
 
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def get_api_key(cls, v: str) -> str:
+        """Get API key from environment if not set (Go SDK compatibility)."""
+        if not v:
+            return os.environ.get("TELEMETRYFLOW_API_KEY", "")
+        return v
+
     @field_validator("api_key_id", mode="before")
     @classmethod
     def get_api_key_id(cls, v: str) -> str:
@@ -156,10 +239,20 @@ class Config(BaseSettings):
         extra="ignore",
     )
 
+    # Core configuration
     server: ServerConfig = Field(default_factory=ServerConfig)
     claude: ClaudeConfig = Field(default_factory=ClaudeConfig)
     mcp: MCPConfig = Field(default_factory=MCPConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
+
+    # Infrastructure configuration
+    cache: CacheConfig = Field(default_factory=CacheConfig)
+    queue: QueueConfig = Field(default_factory=QueueConfig)
+    database: DatabaseConfig = Field(default_factory=DatabaseConfig)
+    analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
+
+    # Telemetry configuration
+    telemetry_mcp: TelemetryMCPConfig = Field(default_factory=TelemetryMCPConfig)
     telemetry: TelemetryConfig = Field(default_factory=TelemetryConfig)
 
     @classmethod
@@ -182,6 +275,11 @@ class Config(BaseSettings):
             claude=ClaudeConfig(**data.get("claude", {})),
             mcp=MCPConfig(**data.get("mcp", {})),
             logging=LoggingConfig(**data.get("logging", {})),
+            cache=CacheConfig(**data.get("cache", {})),
+            queue=QueueConfig(**data.get("queue", {})),
+            database=DatabaseConfig(**data.get("database", {})),
+            analytics=AnalyticsConfig(**data.get("analytics", {})),
+            telemetry_mcp=TelemetryMCPConfig(**data.get("telemetry_mcp", {})),
             telemetry=TelemetryConfig(**data.get("telemetry", {})),
         )
 

@@ -343,6 +343,17 @@ docker run -it --rm \
   devopscorner/tfo-python-mcp:latest \
   serve --config /app/tfo-mcp.yaml
 
+# With all environment variables
+docker run -it --rm \
+  -e ANTHROPIC_API_KEY="your-api-key" \
+  -e TELEMETRYFLOW_MCP_LOG_LEVEL="info" \
+  -e TELEMETRYFLOW_MCP_LOG_FORMAT="json" \
+  -e TELEMETRYFLOW_MCP_DEBUG="false" \
+  -e TELEMETRYFLOW_API_KEY="your-telemetryflow-key" \
+  -e TELEMETRYFLOW_ENDPOINT="api.telemetryflow.id:4317" \
+  -e TELEMETRYFLOW_ENVIRONMENT="production" \
+  devopscorner/tfo-python-mcp:latest
+
 # With volume for resources
 docker run -it --rm \
   -v $(pwd)/tfo-mcp.yaml:/app/tfo-mcp.yaml \
@@ -420,14 +431,15 @@ flowchart TB
       "command": "python",
       "args": ["-m", "tfo_mcp", "serve"],
       "env": {
-        "ANTHROPIC_API_KEY": "your-api-key"
+        "ANTHROPIC_API_KEY": "your-api-key",
+        "TELEMETRYFLOW_MCP_LOG_LEVEL": "info"
       }
     }
   }
 }
 ```
 
-**With virtual environment:**
+**With virtual environment and telemetry:**
 
 ```json
 {
@@ -436,7 +448,12 @@ flowchart TB
       "command": "/path/to/.venv/bin/python",
       "args": ["-m", "tfo_mcp", "serve"],
       "env": {
-        "ANTHROPIC_API_KEY": "your-api-key"
+        "ANTHROPIC_API_KEY": "your-api-key",
+        "TELEMETRYFLOW_MCP_LOG_LEVEL": "info",
+        "TELEMETRYFLOW_MCP_TELEMETRY_ENABLED": "true",
+        "TELEMETRYFLOW_API_KEY": "your-telemetryflow-key",
+        "TELEMETRYFLOW_ENDPOINT": "api.telemetryflow.id:4317",
+        "TELEMETRYFLOW_ENVIRONMENT": "production"
       }
     }
   }
@@ -485,7 +502,11 @@ flowchart TB
       "command": "python",
       "args": ["-m", "tfo_mcp", "serve", "--log-level", "debug"],
       "env": {
-        "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}"
+        "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}",
+        "TELEMETRYFLOW_MCP_LOG_LEVEL": "debug",
+        "TELEMETRYFLOW_MCP_LOG_FORMAT": "text",
+        "TELEMETRYFLOW_API_KEY": "${env:TELEMETRYFLOW_API_KEY}",
+        "TELEMETRYFLOW_ENVIRONMENT": "development"
       }
     }
   }
