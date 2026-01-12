@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tfo-mcp"
+name = "telemetryflow-python-mcp"
 version = "1.1.2"
 description = "TelemetryFlow Python MCP Server - AI Integration Layer for TelemetryFlow Platform"
 readme = "README.md"
@@ -69,7 +69,7 @@ telemetry = [
     "telemetryflow>=1.1.0",
 ]
 all = [
-    "tfo-mcp[dev,redis,nats,postgres,clickhouse,telemetry]",
+    "telemetryflow-python-mcp[dev,redis,nats,postgres,clickhouse,telemetry]",
 ]
 
 [project.scripts]
