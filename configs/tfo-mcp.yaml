@@ -1,0 +1,43 @@
+# TelemetryFlow Python MCP Server Configuration
+# Python Implementation v1.1.2
+
+server:
+  name: "TelemetryFlow-MCP"
+  version: "1.1.2"
+  host: "localhost"
+  port: 8080
+  transport: "stdio"  # stdio, sse, websocket (future)
+  debug: false
+  read_timeout: 300.0
+  write_timeout: 60.0
+
+claude:
+  # API key - can also be set via ANTHROPIC_API_KEY environment variable
+  api_key: ""
+  default_model: "claude-sonnet-4-20250514"
+  max_tokens: 4096
+  temperature: 1.0
+  timeout: 120.0
+  max_retries: 3
+  # base_url: ""  # Optional custom base URL
+
+mcp:
+  protocol_version: "2024-11-05"
+  enable_tools: true
+  enable_resources: true
+  enable_prompts: true
+  enable_logging: true
+  enable_sampling: false
+  tool_timeout: 30.0
+  max_message_size: 10485760  # 10MB
+
+logging:
+  level: "info"  # debug, info, warning, error
+  format: "json"  # json, text
+  output: "stderr"  # stderr, stdout, or file path
+
+telemetry:
+  enabled: false
+  service_name: "telemetryflow-mcp"
+  otlp_endpoint: "localhost:4317"
+  sampling_rate: 1.0

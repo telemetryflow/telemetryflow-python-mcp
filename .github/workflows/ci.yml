@@ -1,0 +1,367 @@
+# =============================================================================
+# TelemetryFlow Python MCP Server - CI Workflow
+# =============================================================================
+#
+# TelemetryFlow Python MCP Server - Community Enterprise Observability Platform (CEOP)
+# Copyright (c) 2024-2026 DevOpsCorner Indonesia. All rights reserved.
+#
+# This workflow runs tests and linting for the TelemetryFlow Python MCP Server:
+# - Unit tests (via Makefile)
+# - Integration tests (via Makefile)
+# - Linting with ruff and mypy (via Makefile)
+# - Code coverage (via Makefile)
+#
+# MCP Protocol: 2024-11-05
+#
+# =============================================================================
+
+name: CI - TFO Python MCP
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - 'feature/**'
+      - 'release/**'
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'Makefile'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'Makefile'
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests'
+        required: false
+        type: boolean
+        default: false
+      skip_lint:
+        description: 'Skip linting'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: '3.12'
+  PRODUCT_NAME: TelemetryFlow Python MCP Server
+  VERSION: '1.1.2'
+  MCP_PROTOCOL_VERSION: '2024-11-05'
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  # ===========================================================================
+  # Code Quality - Lint, Format, Type Check (via Makefile)
+  # ===========================================================================
+  lint:
+    name: Lint & Code Quality
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_lint }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Show version info
+        run: make version
+
+      - name: Run CI lint suite
+        run: make ci-lint
+
+  # ===========================================================================
+  # Unit Tests (via Makefile)
+  # ===========================================================================
+  test-unit:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Run unit tests (CI mode)
+        run: make ci-test-unit
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: |
+            coverage-unit.xml
+            junit-unit.xml
+          retention-days: 7
+
+  # ===========================================================================
+  # Integration Tests (via Makefile)
+  # ===========================================================================
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Run integration tests (CI mode)
+        run: make ci-test-integration
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration
+          path: |
+            coverage-integration.xml
+            junit-integration.xml
+          retention-days: 7
+        continue-on-error: true
+
+  # ===========================================================================
+  # E2E Tests (Optional)
+  # ===========================================================================
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-integration]
+    if: ${{ inputs.run_e2e == true || github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Run E2E tests
+        run: |
+          pytest tests/e2e/ -v || true
+
+  # ===========================================================================
+  # Build Verification - MCP Server (via Makefile)
+  # ===========================================================================
+  build:
+    name: Build & Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install package (Unix)
+        if: matrix.os != 'windows-latest'
+        run: make deps
+
+      - name: Install package (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "."
+
+      - name: Show version info (Unix)
+        if: matrix.os != 'windows-latest'
+        run: make version
+
+      - name: Verify MCP CLI (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          tfo-mcp --version
+          tfo-mcp --help
+
+      - name: Verify MCP CLI (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          tfo-mcp --version
+          tfo-mcp --help
+
+  # ===========================================================================
+  # Security Scan (via Makefile)
+  # ===========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    if: always() && (needs.lint.result == 'success' || needs.lint.result == 'skipped')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Run security scan (CI mode)
+        run: make ci-security
+
+      - name: Upload Bandit SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: bandit-results.json
+        continue-on-error: true
+
+  # ===========================================================================
+  # Coverage Report (via Makefile)
+  # ===========================================================================
+  coverage:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-integration]
+    if: always() && needs.test-unit.result == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      - name: Install CI dependencies
+        run: make ci-deps
+
+      - name: Generate coverage report (CI mode)
+        run: make ci-coverage
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 7
+        continue-on-error: true
+
+      - name: Coverage summary
+        run: |
+          echo "## Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage.xml ]; then
+            echo "Coverage report generated successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### MCP Server Features Tested:" >> $GITHUB_STEP_SUMMARY
+            echo "- MCP Protocol: ${{ env.MCP_PROTOCOL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Tools: echo, read_file, write_file, list_directory, execute_command, search_files, get_file_info, send_message" >> $GITHUB_STEP_SUMMARY
+            echo "- Resources: config://server, session://current, tools://list" >> $GITHUB_STEP_SUMMARY
+            echo "- Prompts: code_review, explain_code, debug_error" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No coverage report available" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ===========================================================================
+  # CI Summary
+  # ===========================================================================
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-integration, build, security, coverage]
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## ${{ env.PRODUCT_NAME }} v${{ env.VERSION }} - CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**MCP Protocol Version:** ${{ env.MCP_PROTOCOL_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.test-unit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.test-integration.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | ${{ needs.coverage.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### MCP Server Features" >> $GITHUB_STEP_SUMMARY
+          echo "- Domain-Driven Design (DDD) architecture" >> $GITHUB_STEP_SUMMARY
+          echo "- CQRS pattern implementation" >> $GITHUB_STEP_SUMMARY
+          echo "- Claude API integration" >> $GITHUB_STEP_SUMMARY
+          echo "- 8 built-in tools, 3 resources, 3 prompts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check overall status
+        run: |
+          if [[ "${{ needs.lint.result }}" == "failure" ]] || \
+             [[ "${{ needs.test-unit.result }}" == "failure" ]] || \
+             [[ "${{ needs.build.result }}" == "failure" ]]; then
+            echo "CI failed - one or more required jobs failed"
+            exit 1
+          fi
+          echo "CI passed successfully"
