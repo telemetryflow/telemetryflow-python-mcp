@@ -57,11 +57,11 @@ flowchart TB
 
 ## Available Hooks
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `pre-commit` | Before commit | Format check, lint, type check |
-| `commit-msg` | After commit message | Validate message format |
-| `pre-push` | Before push | Full tests |
+| Hook         | Trigger              | Purpose                        |
+| ------------ | -------------------- | ------------------------------ |
+| `pre-commit` | Before commit        | Format check, lint, type check |
+| `commit-msg` | After commit message | Validate message format        |
+| `pre-push`   | Before push          | Full tests                     |
 
 ---
 
@@ -141,6 +141,7 @@ flowchart TB
 ```
 
 **Checks performed:**
+
 1. **Format Check (black)**: Ensures all Python files are properly formatted
 2. **Linting (ruff)**: Static analysis for common errors and style issues
 3. **Type Check (mypy)**: Type checking for type annotations
@@ -184,6 +185,7 @@ repos:
 Validates commit message format follows Conventional Commits.
 
 **Format:**
+
 ```
 <type>(<scope>): <subject>
 
@@ -193,6 +195,7 @@ Validates commit message format follows Conventional Commits.
 ```
 
 **Valid types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -206,6 +209,7 @@ Validates commit message format follows Conventional Commits.
 - `revert`: Revert commit
 
 **Examples:**
+
 ```
 feat(tools): add file search tool
 
@@ -215,6 +219,7 @@ docs: update README
 ```
 
 **Script:**
+
 ```bash
 #!/usr/bin/env bash
 
@@ -263,10 +268,12 @@ flowchart TB
 ```
 
 **Checks performed:**
+
 1. **Full Test Suite**: All tests with coverage
 2. **Linting**: Full ruff check
 
 **Script:**
+
 ```bash
 #!/usr/bin/env bash
 set -e
@@ -355,13 +362,13 @@ pre-commit run --verbose
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Permission denied | `chmod +x .git/hooks/*` |
-| Command not found | Activate virtual environment |
-| Tests failing | Fix tests before committing |
-| Format check failing | Run `make fmt` |
-| Type errors | Fix type annotations |
+| Issue                | Solution                     |
+| -------------------- | ---------------------------- |
+| Permission denied    | `chmod +x .git/hooks/*`      |
+| Command not found    | Activate virtual environment |
+| Tests failing        | Fix tests before committing  |
+| Format check failing | Run `make fmt`               |
+| Type errors          | Fix type annotations         |
 
 ### Resetting Hooks
 
