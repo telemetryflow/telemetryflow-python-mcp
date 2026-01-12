@@ -346,7 +346,7 @@ graph TB
     end
 
     subgraph Container["Docker Container"]
-        MCP["TFO-MCP Server"]
+        MCP["TFO-Python-MCP Server"]
     end
 
     subgraph Optional["Optional Services"]

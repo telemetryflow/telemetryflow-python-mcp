@@ -8,11 +8,7 @@ import pytest
 from tfo_mcp.domain.aggregates import Session, SessionCapabilities, SessionState
 from tfo_mcp.domain.aggregates.session import ClientInfo
 from tfo_mcp.domain.entities import Tool
-from tfo_mcp.domain.events import (
-    SessionClosedEvent,
-    SessionCreatedEvent,
-    SessionInitializedEvent,
-)
+from tfo_mcp.domain.events import SessionClosedEvent, SessionCreatedEvent, SessionInitializedEvent
 from tfo_mcp.infrastructure.persistence import InMemorySessionRepository
 
 

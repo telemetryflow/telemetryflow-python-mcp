@@ -354,7 +354,7 @@ telemetry:
   api_key_id: "" # or TELEMETRYFLOW_API_KEY_ID env var
   api_key_secret: "" # or TELEMETRYFLOW_API_KEY_SECRET env var
   endpoint: "api.telemetryflow.id:4317"
-  service_name: "telemetryflow-mcp"
+  service_name: "telemetryflow-python-mcp"
   environment: "production"
 ```
 

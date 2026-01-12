@@ -159,7 +159,9 @@ class TelemetryMCPConfig(BaseSettings):
     otlp_endpoint: str = Field(
         default="localhost:4317", description="OTLP endpoint for legacy integration"
     )
-    service_name: str = Field(default="telemetryflow-mcp", description="Service name for OTEL")
+    service_name: str = Field(
+        default="telemetryflow-python-mcp", description="Service name for OTEL"
+    )
 
 
 class TelemetryConfig(BaseSettings):
@@ -171,7 +173,7 @@ class TelemetryConfig(BaseSettings):
     )
 
     enabled: bool = Field(default=False, description="Enable telemetry")
-    service_name: str = Field(default="telemetryflow-mcp", description="Service name")
+    service_name: str = Field(default="telemetryflow-python-mcp", description="Service name")
     service_version: str = Field(default="1.1.2", description="Service version")
     service_namespace: str = Field(default="telemetryflow", description="Service namespace")
     environment: str = Field(default="production", description="Deployment environment")

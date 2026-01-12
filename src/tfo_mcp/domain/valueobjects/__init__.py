@@ -1,12 +1,6 @@
 """Value objects - Immutable domain primitives."""
 
-from tfo_mcp.domain.valueobjects.content import (
-    ContentType,
-    MimeType,
-    Model,
-    Role,
-    SystemPrompt,
-)
+from tfo_mcp.domain.valueobjects.content import ContentType, MimeType, Model, Role, SystemPrompt
 from tfo_mcp.domain.valueobjects.identifiers import (
     ConversationID,
     MessageID,

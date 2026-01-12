@@ -271,7 +271,7 @@ logging:
 telemetry:
   # Enable to send telemetry to TelemetryFlow platform
   enabled: false
-  service_name: "telemetryflow-mcp"
+  service_name: "telemetryflow-python-mcp"
   service_version: "1.1.2"
   service_namespace: "telemetryflow"
   environment: "production"

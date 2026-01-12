@@ -1,4 +1,4 @@
-# TFO-MCP Observability Standards
+# TFO-Python-MCP Observability Standards
 
 ## Overview
 
@@ -56,7 +56,7 @@ class TelemetryConfig(BaseSettings):
         description="Enable telemetry collection",
     )
     service_name: str = Field(
-        default="telemetryflow-mcp",
+        default="telemetryflow-python-mcp",
         description="Service name for telemetry",
     )
     service_version: str = Field(
@@ -128,7 +128,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 
-tracer = trace.get_tracer("telemetryflow-mcp")
+tracer = trace.get_tracer("telemetryflow-python-mcp")
 
 
 @asynccontextmanager
@@ -139,7 +139,7 @@ async def mcp_span(
     """Create an MCP operation span."""
     attrs = {
         "mcp.protocol.version": "2024-11-05",
-        "service.name": "telemetryflow-mcp",
+        "service.name": "telemetryflow-python-mcp",
     }
     if attributes:
         attrs.update(attributes)
@@ -805,7 +805,7 @@ class SamplingStrategy:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | TELEMETRYFLOW_MCP_TELEMETRY_ENABLED | Enable telemetry | true |
-| TELEMETRYFLOW_MCP_TELEMETRY_SERVICE_NAME | Service name | telemetryflow-mcp |
+| TELEMETRYFLOW_MCP_TELEMETRY_SERVICE_NAME | Service name | telemetryflow-python-mcp |
 | TELEMETRYFLOW_MCP_OTLP_ENDPOINT | OTLP endpoint | http://localhost:4317 |
 | TELEMETRYFLOW_MCP_LOG_LEVEL | Log level | INFO |
 | TELEMETRYFLOW_MCP_LOG_FORMAT | Log format | json |

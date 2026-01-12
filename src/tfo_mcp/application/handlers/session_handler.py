@@ -15,11 +15,7 @@ if TYPE_CHECKING:
         InitializeSessionCommand,
         SetLogLevelCommand,
     )
-    from tfo_mcp.application.queries import (
-        GetSessionQuery,
-        GetSessionStatsQuery,
-        ListSessionsQuery,
-    )
+    from tfo_mcp.application.queries import GetSessionQuery, GetSessionStatsQuery, ListSessionsQuery
     from tfo_mcp.domain.repositories import ISessionRepository
 
 

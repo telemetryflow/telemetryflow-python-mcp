@@ -157,18 +157,18 @@ classDiagram
 
 ### Quick Reference
 
-| Variable                                 | Description              | Default                  |
-| ---------------------------------------- | ------------------------ | ------------------------ |
-| `ANTHROPIC_API_KEY`                      | Claude API key (required)| -                        |
-| `TELEMETRYFLOW_MCP_SERVER_TRANSPORT`     | Transport type           | stdio                    |
-| `TELEMETRYFLOW_MCP_SERVER_PORT`          | Server port (SSE/WS)     | 8080                     |
-| `TELEMETRYFLOW_MCP_LOG_LEVEL`            | Log level                | info                     |
-| `TELEMETRYFLOW_MCP_LOG_FORMAT`           | Log format               | json                     |
-| `TELEMETRYFLOW_MCP_DEBUG`                | Debug mode               | false                    |
-| `TELEMETRYFLOW_MCP_CLAUDE_DEFAULT_MODEL` | Default Claude model     | claude-sonnet-4-20250514 |
-| `TELEMETRYFLOW_MCP_OTLP_ENDPOINT`        | OTEL collector endpoint  | localhost:4317           |
-| `TELEMETRYFLOW_API_KEY`                  | TelemetryFlow API key    | -                        |
-| `TELEMETRYFLOW_ENDPOINT`                 | TelemetryFlow endpoint   | api.telemetryflow.id:4317|
+| Variable                                 | Description               | Default                   |
+| ---------------------------------------- | ------------------------- | ------------------------- |
+| `ANTHROPIC_API_KEY`                      | Claude API key (required) | -                         |
+| `TELEMETRYFLOW_MCP_SERVER_TRANSPORT`     | Transport type            | stdio                     |
+| `TELEMETRYFLOW_MCP_SERVER_PORT`          | Server port (SSE/WS)      | 8080                      |
+| `TELEMETRYFLOW_MCP_LOG_LEVEL`            | Log level                 | info                      |
+| `TELEMETRYFLOW_MCP_LOG_FORMAT`           | Log format                | json                      |
+| `TELEMETRYFLOW_MCP_DEBUG`                | Debug mode                | false                     |
+| `TELEMETRYFLOW_MCP_CLAUDE_DEFAULT_MODEL` | Default Claude model      | claude-sonnet-4-20250514  |
+| `TELEMETRYFLOW_MCP_OTLP_ENDPOINT`        | OTEL collector endpoint   | localhost:4317            |
+| `TELEMETRYFLOW_API_KEY`                  | TelemetryFlow API key     | -                         |
+| `TELEMETRYFLOW_ENDPOINT`                 | TelemetryFlow endpoint    | api.telemetryflow.id:4317 |
 
 ---
 
@@ -176,14 +176,14 @@ classDiagram
 
 ```yaml
 server:
-  name: "TelemetryFlow-MCP"      # Server name
-  version: "1.1.2"               # Server version
-  host: "localhost"              # Host (for future HTTP transports)
-  port: 8080                     # Port (for future HTTP transports)
-  transport: "stdio"             # Transport type: stdio, sse, websocket
-  debug: false                   # Debug mode
-  read_timeout: 300.0            # Read timeout in seconds
-  write_timeout: 60.0            # Write timeout in seconds
+  name: "TelemetryFlow-MCP" # Server name
+  version: "1.1.2" # Server version
+  host: "localhost" # Host (for future HTTP transports)
+  port: 8080 # Port (for future HTTP transports)
+  transport: "stdio" # Transport type: stdio, sse, websocket
+  debug: false # Debug mode
+  read_timeout: 300.0 # Read timeout in seconds
+  write_timeout: 60.0 # Write timeout in seconds
 ```
 
 | Option        | Environment Variable                     | Default           | Description       |
@@ -203,13 +203,13 @@ server:
 
 ```yaml
 claude:
-  api_key: ""                              # Anthropic API key
+  api_key: "" # Anthropic API key
   default_model: "claude-sonnet-4-20250514" # Default model
-  max_tokens: 4096                         # Max tokens per request
-  temperature: 1.0                         # Temperature (0.0-2.0)
-  timeout: 120.0                           # Request timeout in seconds
-  max_retries: 3                           # Max retry attempts
-  base_url: null                           # Custom base URL (optional)
+  max_tokens: 4096 # Max tokens per request
+  temperature: 1.0 # Temperature (0.0-2.0)
+  timeout: 120.0 # Request timeout in seconds
+  max_retries: 3 # Max retry attempts
+  base_url: null # Custom base URL (optional)
 ```
 
 | Option        | Environment Variable                     | Default                  | Description                  |
@@ -255,22 +255,22 @@ graph LR
 
 ```yaml
 mcp:
-  protocol_version: "2024-11-05"  # MCP protocol version
-  enable_tools: true              # Enable tools capability
-  enable_resources: true          # Enable resources capability
-  enable_prompts: true            # Enable prompts capability
-  enable_logging: true            # Enable logging capability
-  enable_sampling: false          # Enable sampling capability
-  tool_timeout: 30.0              # Tool execution timeout (seconds)
-  max_message_size: 10485760      # Max message size (10MB)
+  protocol_version: "2024-11-05" # MCP protocol version
+  enable_tools: true # Enable tools capability
+  enable_resources: true # Enable resources capability
+  enable_prompts: true # Enable prompts capability
+  enable_logging: true # Enable logging capability
+  enable_sampling: false # Enable sampling capability
+  tool_timeout: 30.0 # Tool execution timeout (seconds)
+  max_message_size: 10485760 # Max message size (10MB)
 ```
 
 | Option           | Environment Variable                     | Default    | Description      |
 | ---------------- | ---------------------------------------- | ---------- | ---------------- |
 | protocol_version | `TELEMETRYFLOW_MCP_MCP_PROTOCOL_VERSION` | 2024-11-05 | Protocol version |
-| enable_tools     | `TELEMETRYFLOW_MCP_ENABLE_TOOLS`     | true       | Enable tools     |
-| enable_resources | `TELEMETRYFLOW_MCP_ENABLE_RESOURCES` | true       | Enable resources |
-| enable_prompts   | `TELEMETRYFLOW_MCP_ENABLE_PROMPTS`   | true       | Enable prompts   |
+| enable_tools     | `TELEMETRYFLOW_MCP_ENABLE_TOOLS`         | true       | Enable tools     |
+| enable_resources | `TELEMETRYFLOW_MCP_ENABLE_RESOURCES`     | true       | Enable resources |
+| enable_prompts   | `TELEMETRYFLOW_MCP_ENABLE_PROMPTS`       | true       | Enable prompts   |
 | enable_logging   | `TELEMETRYFLOW_MCP_MCP_ENABLE_LOGGING`   | true       | Enable logging   |
 | enable_sampling  | `TELEMETRYFLOW_MCP_MCP_ENABLE_SAMPLING`  | false      | Enable sampling  |
 | tool_timeout     | `TELEMETRYFLOW_MCP_MCP_TOOL_TIMEOUT`     | 30.0       | Tool timeout (s) |
@@ -282,9 +282,9 @@ mcp:
 
 ```yaml
 logging:
-  level: "info"     # Log level
-  format: "json"    # Log format
-  output: "stderr"  # Log output
+  level: "info" # Log level
+  format: "json" # Log format
+  output: "stderr" # Log output
 ```
 
 | Option | Environment Variable           | Default | Description |
@@ -327,16 +327,16 @@ graph LR
 
 ```yaml
 cache:
-  redis_url: "redis://localhost:6379"  # Redis connection URL
-  cache_enabled: true                   # Enable caching
-  cache_ttl: 300                        # Cache TTL in seconds
+  redis_url: "redis://localhost:6379" # Redis connection URL
+  cache_enabled: true # Enable caching
+  cache_ttl: 300 # Cache TTL in seconds
 ```
 
-| Option        | Environment Variable             | Default                 | Description      |
-| ------------- | -------------------------------- | ----------------------- | ---------------- |
-| redis_url     | `TELEMETRYFLOW_MCP_REDIS_URL`    | redis://localhost:6379  | Redis URL        |
-| cache_enabled | `TELEMETRYFLOW_MCP_CACHE_ENABLED`| true                    | Enable caching   |
-| cache_ttl     | `TELEMETRYFLOW_MCP_CACHE_TTL`    | 300                     | TTL (seconds)    |
+| Option        | Environment Variable              | Default                | Description    |
+| ------------- | --------------------------------- | ---------------------- | -------------- |
+| redis_url     | `TELEMETRYFLOW_MCP_REDIS_URL`     | redis://localhost:6379 | Redis URL      |
+| cache_enabled | `TELEMETRYFLOW_MCP_CACHE_ENABLED` | true                   | Enable caching |
+| cache_ttl     | `TELEMETRYFLOW_MCP_CACHE_TTL`     | 300                    | TTL (seconds)  |
 
 ---
 
@@ -344,16 +344,16 @@ cache:
 
 ```yaml
 queue:
-  queue_enabled: true                    # Enable queue processing
-  queue_concurrency: 5                   # Queue concurrency
-  nats_url: "nats://localhost:4222"      # NATS connection URL
+  queue_enabled: true # Enable queue processing
+  queue_concurrency: 5 # Queue concurrency
+  nats_url: "nats://localhost:4222" # NATS connection URL
 ```
 
-| Option            | Environment Variable                   | Default                 | Description        |
-| ----------------- | -------------------------------------- | ----------------------- | ------------------ |
-| queue_enabled     | `TELEMETRYFLOW_MCP_QUEUE_ENABLED`      | true                    | Enable queue       |
-| queue_concurrency | `TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY`  | 5                       | Concurrency        |
-| nats_url          | `TELEMETRYFLOW_MCP_NATS_URL`           | nats://localhost:4222   | NATS URL           |
+| Option            | Environment Variable                  | Default               | Description  |
+| ----------------- | ------------------------------------- | --------------------- | ------------ |
+| queue_enabled     | `TELEMETRYFLOW_MCP_QUEUE_ENABLED`     | true                  | Enable queue |
+| queue_concurrency | `TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY` | 5                     | Concurrency  |
+| nats_url          | `TELEMETRYFLOW_MCP_NATS_URL`          | nats://localhost:4222 | NATS URL     |
 
 ---
 
@@ -362,15 +362,15 @@ queue:
 ```yaml
 database:
   postgres_url: "postgres://telemetryflow:telemetryflow@localhost:5432/tfo_mcp?sslmode=disable"
-  postgres_max_conns: 25                 # Maximum connections
-  postgres_min_conns: 5                  # Minimum connections
+  postgres_max_conns: 25 # Maximum connections
+  postgres_min_conns: 5 # Minimum connections
 ```
 
-| Option            | Environment Variable                  | Default                           | Description        |
-| ----------------- | ------------------------------------- | --------------------------------- | ------------------ |
-| postgres_url      | `TELEMETRYFLOW_MCP_POSTGRES_URL`      | postgres://...localhost:5432/...  | PostgreSQL URL     |
-| postgres_max_conns| `TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS`| 25                                | Max connections    |
-| postgres_min_conns| `TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS`| 5                                 | Min connections    |
+| Option             | Environment Variable                   | Default                          | Description     |
+| ------------------ | -------------------------------------- | -------------------------------- | --------------- |
+| postgres_url       | `TELEMETRYFLOW_MCP_POSTGRES_URL`       | postgres://...localhost:5432/... | PostgreSQL URL  |
+| postgres_max_conns | `TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS` | 25                               | Max connections |
+| postgres_min_conns | `TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS` | 5                                | Min connections |
 
 ---
 
@@ -381,8 +381,8 @@ analytics:
   clickhouse_url: "clickhouse://localhost:9000/tfo_mcp_analytics"
 ```
 
-| Option         | Environment Variable               | Default                                     | Description    |
-| -------------- | ---------------------------------- | ------------------------------------------- | -------------- |
+| Option         | Environment Variable               | Default                                       | Description    |
+| -------------- | ---------------------------------- | --------------------------------------------- | -------------- |
 | clickhouse_url | `TELEMETRYFLOW_MCP_CLICKHOUSE_URL` | clickhouse://localhost:9000/tfo_mcp_analytics | ClickHouse URL |
 
 ---
@@ -393,18 +393,18 @@ This section controls MCP-level telemetry settings.
 
 ```yaml
 telemetry_mcp:
-  enabled: true                        # Enable telemetry
-  backend: "telemetryflow"             # Backend: telemetryflow, otel
-  otlp_endpoint: "localhost:4317"      # OTLP endpoint
-  service_name: "telemetryflow-mcp"    # Service name
+  enabled: true # Enable telemetry
+  backend: "telemetryflow" # Backend: telemetryflow, otel
+  otlp_endpoint: "localhost:4317" # OTLP endpoint
+  service_name: "telemetryflow-python-mcp" # Service name
 ```
 
-| Option        | Environment Variable                   | Default           | Description        |
-| ------------- | -------------------------------------- | ----------------- | ------------------ |
-| enabled       | `TELEMETRYFLOW_MCP_TELEMETRY_ENABLED`  | true              | Enable telemetry   |
-| backend       | `TELEMETRYFLOW_MCP_TELEMETRY_BACKEND`  | telemetryflow     | Telemetry backend  |
-| otlp_endpoint | `TELEMETRYFLOW_MCP_OTLP_ENDPOINT`      | localhost:4317    | OTLP endpoint      |
-| service_name  | `TELEMETRYFLOW_MCP_SERVICE_NAME`       | telemetryflow-mcp | Service name       |
+| Option        | Environment Variable                  | Default                  | Description       |
+| ------------- | ------------------------------------- | ------------------------ | ----------------- |
+| enabled       | `TELEMETRYFLOW_MCP_TELEMETRY_ENABLED` | true                     | Enable telemetry  |
+| backend       | `TELEMETRYFLOW_MCP_TELEMETRY_BACKEND` | telemetryflow            | Telemetry backend |
+| otlp_endpoint | `TELEMETRYFLOW_MCP_OTLP_ENDPOINT`     | localhost:4317           | OTLP endpoint     |
+| service_name  | `TELEMETRYFLOW_MCP_SERVICE_NAME`      | telemetryflow-python-mcp | Service name      |
 
 ---
 
@@ -414,90 +414,90 @@ This section configures the TelemetryFlow Python SDK for observability.
 
 ```yaml
 telemetry:
-  enabled: false                        # Enable TelemetryFlow SDK
-  service_name: "telemetryflow-mcp"     # Service name
-  service_version: "1.1.2"              # Service version
-  service_namespace: "telemetryflow"    # Service namespace
-  environment: "development"            # Environment
+  enabled: false # Enable TelemetryFlow SDK
+  service_name: "telemetryflow-python-mcp" # Service name
+  service_version: "1.1.2" # Service version
+  service_namespace: "telemetryflow" # Service namespace
+  environment: "development" # Environment
 
   # API credentials - supports both formats
-  api_key: ""                           # Single key (Go SDK compatibility)
-  api_key_id: ""                        # Key ID (tfk_*)
-  api_key_secret: ""                    # Key secret (tfs_*)
+  api_key: "" # Single key (Go SDK compatibility)
+  api_key_id: "" # Key ID (tfk_*)
+  api_key_secret: "" # Key secret (tfs_*)
 
   # Connection settings
   endpoint: "api.telemetryflow.id:4317" # TelemetryFlow endpoint
-  protocol: "grpc"                      # Protocol: grpc, http
-  insecure: false                       # Use insecure connection
-  timeout: 30.0                         # Timeout (seconds)
-  compression: true                     # Enable compression
+  protocol: "grpc" # Protocol: grpc, http
+  insecure: false # Use insecure connection
+  timeout: 30.0 # Timeout (seconds)
+  compression: true # Enable compression
 
   # Signal configuration
-  enable_traces: true                   # Enable traces
-  enable_metrics: true                  # Enable metrics
-  enable_logs: true                     # Enable logs
-  enable_exemplars: true                # Enable exemplars
+  enable_traces: true # Enable traces
+  enable_metrics: true # Enable metrics
+  enable_logs: true # Enable logs
+  enable_exemplars: true # Enable exemplars
 
   # Batch settings
-  batch_timeout_ms: 5000                # Batch timeout (ms)
-  batch_max_size: 512                   # Max batch size
+  batch_timeout_ms: 5000 # Batch timeout (ms)
+  batch_max_size: 512 # Max batch size
 
   # Retry settings
-  retry_enabled: true                   # Enable retry
-  max_retries: 3                        # Max retries
-  retry_backoff_ms: 500                 # Retry backoff (ms)
+  retry_enabled: true # Enable retry
+  max_retries: 3 # Max retries
+  retry_backoff_ms: 500 # Retry backoff (ms)
 
   # Rate limiting
-  rate_limit: 1000                      # Rate limit (req/min)
+  rate_limit: 1000 # Rate limit (req/min)
 ```
 
 ### Core Settings
 
-| Option            | Environment Variable              | Default                  | Description        |
-| ----------------- | --------------------------------- | ------------------------ | ------------------ |
-| enabled           | `TELEMETRYFLOW_ENABLED`           | false                    | Enable SDK         |
-| service_name      | `TELEMETRYFLOW_SERVICE_NAME`      | telemetryflow-mcp        | Service name       |
-| service_version   | `TELEMETRYFLOW_SERVICE_VERSION`   | 1.1.2                    | Service version    |
-| service_namespace | `TELEMETRYFLOW_SERVICE_NAMESPACE` | telemetryflow            | Service namespace  |
-| environment       | `TELEMETRYFLOW_ENVIRONMENT`       | production               | Environment        |
+| Option            | Environment Variable              | Default                  | Description       |
+| ----------------- | --------------------------------- | ------------------------ | ----------------- |
+| enabled           | `TELEMETRYFLOW_ENABLED`           | false                    | Enable SDK        |
+| service_name      | `TELEMETRYFLOW_SERVICE_NAME`      | telemetryflow-python-mcp | Service name      |
+| service_version   | `TELEMETRYFLOW_SERVICE_VERSION`   | 1.1.2                    | Service version   |
+| service_namespace | `TELEMETRYFLOW_SERVICE_NAMESPACE` | telemetryflow            | Service namespace |
+| environment       | `TELEMETRYFLOW_ENVIRONMENT`       | production               | Environment       |
 
 ### API Credentials
 
-| Option         | Environment Variable           | Default | Description                     |
-| -------------- | ------------------------------ | ------- | ------------------------------- |
-| api_key        | `TELEMETRYFLOW_API_KEY`        | -       | Single API key (Go compat)      |
-| api_key_id     | `TELEMETRYFLOW_API_KEY_ID`     | -       | API key ID (tfk_*)              |
-| api_key_secret | `TELEMETRYFLOW_API_KEY_SECRET` | -       | API key secret (tfs_*)          |
+| Option         | Environment Variable           | Default | Description                |
+| -------------- | ------------------------------ | ------- | -------------------------- |
+| api_key        | `TELEMETRYFLOW_API_KEY`        | -       | Single API key (Go compat) |
+| api_key_id     | `TELEMETRYFLOW_API_KEY_ID`     | -       | API key ID (tfk\_\*)       |
+| api_key_secret | `TELEMETRYFLOW_API_KEY_SECRET` | -       | API key secret (tfs\_\*)   |
 
 ### Connection Settings
 
-| Option      | Environment Variable        | Default                   | Description      |
-| ----------- | --------------------------- | ------------------------- | ---------------- |
-| endpoint    | `TELEMETRYFLOW_ENDPOINT`    | api.telemetryflow.id:4317 | Endpoint         |
-| protocol    | `TELEMETRYFLOW_PROTOCOL`    | grpc                      | Protocol         |
-| insecure    | `TELEMETRYFLOW_INSECURE`    | false                     | Insecure mode    |
-| timeout     | `TELEMETRYFLOW_TIMEOUT`     | 30.0                      | Timeout (s)      |
-| compression | `TELEMETRYFLOW_COMPRESSION` | true                      | Compression      |
+| Option      | Environment Variable        | Default                   | Description   |
+| ----------- | --------------------------- | ------------------------- | ------------- |
+| endpoint    | `TELEMETRYFLOW_ENDPOINT`    | api.telemetryflow.id:4317 | Endpoint      |
+| protocol    | `TELEMETRYFLOW_PROTOCOL`    | grpc                      | Protocol      |
+| insecure    | `TELEMETRYFLOW_INSECURE`    | false                     | Insecure mode |
+| timeout     | `TELEMETRYFLOW_TIMEOUT`     | 30.0                      | Timeout (s)   |
+| compression | `TELEMETRYFLOW_COMPRESSION` | true                      | Compression   |
 
 ### Signal Configuration
 
-| Option           | Environment Variable              | Default | Description      |
-| ---------------- | --------------------------------- | ------- | ---------------- |
-| enable_traces    | `TELEMETRYFLOW_ENABLE_TRACES`     | true    | Enable traces    |
-| enable_metrics   | `TELEMETRYFLOW_ENABLE_METRICS`    | true    | Enable metrics   |
-| enable_logs      | `TELEMETRYFLOW_ENABLE_LOGS`       | true    | Enable logs      |
-| enable_exemplars | `TELEMETRYFLOW_ENABLE_EXEMPLARS`  | true    | Enable exemplars |
+| Option           | Environment Variable             | Default | Description      |
+| ---------------- | -------------------------------- | ------- | ---------------- |
+| enable_traces    | `TELEMETRYFLOW_ENABLE_TRACES`    | true    | Enable traces    |
+| enable_metrics   | `TELEMETRYFLOW_ENABLE_METRICS`   | true    | Enable metrics   |
+| enable_logs      | `TELEMETRYFLOW_ENABLE_LOGS`      | true    | Enable logs      |
+| enable_exemplars | `TELEMETRYFLOW_ENABLE_EXEMPLARS` | true    | Enable exemplars |
 
 ### Batch & Retry Settings
 
-| Option           | Environment Variable              | Default | Description        |
-| ---------------- | --------------------------------- | ------- | ------------------ |
-| batch_timeout_ms | `TELEMETRYFLOW_BATCH_TIMEOUT_MS`  | 5000    | Batch timeout (ms) |
-| batch_max_size   | `TELEMETRYFLOW_BATCH_MAX_SIZE`    | 512     | Max batch size     |
-| retry_enabled    | `TELEMETRYFLOW_RETRY_ENABLED`     | true    | Enable retry       |
-| max_retries      | `TELEMETRYFLOW_MAX_RETRIES`       | 3       | Max retries        |
-| retry_backoff_ms | `TELEMETRYFLOW_RETRY_BACKOFF_MS`  | 500     | Retry backoff (ms) |
-| rate_limit       | `TELEMETRYFLOW_RATE_LIMIT`        | 1000    | Rate limit         |
+| Option           | Environment Variable             | Default | Description        |
+| ---------------- | -------------------------------- | ------- | ------------------ |
+| batch_timeout_ms | `TELEMETRYFLOW_BATCH_TIMEOUT_MS` | 5000    | Batch timeout (ms) |
+| batch_max_size   | `TELEMETRYFLOW_BATCH_MAX_SIZE`   | 512     | Max batch size     |
+| retry_enabled    | `TELEMETRYFLOW_RETRY_ENABLED`    | true    | Enable retry       |
+| max_retries      | `TELEMETRYFLOW_MAX_RETRIES`      | 3       | Max retries        |
+| retry_backoff_ms | `TELEMETRYFLOW_RETRY_BACKOFF_MS` | 500     | Retry backoff (ms) |
+| rate_limit       | `TELEMETRYFLOW_RATE_LIMIT`       | 1000    | Rate limit         |
 
 ---
 

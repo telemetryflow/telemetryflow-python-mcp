@@ -129,7 +129,7 @@ class MCPTelemetryClient:
         builder.with_rate_limit(self._config.rate_limit)
 
         # Add custom attributes for MCP context
-        builder.with_custom_attribute("mcp.server", "telemetryflow-mcp")
+        builder.with_custom_attribute("mcp.server", "telemetryflow-python-mcp")
         builder.with_custom_attribute("mcp.protocol", "2024-11-05")
 
         # Build client

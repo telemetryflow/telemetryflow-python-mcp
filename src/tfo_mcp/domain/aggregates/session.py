@@ -15,12 +15,7 @@ from tfo_mcp.domain.events import (
     SessionCreatedEvent,
     SessionInitializedEvent,
 )
-from tfo_mcp.domain.valueobjects import (
-    MCPCapability,
-    MCPLogLevel,
-    MCPProtocolVersion,
-    SessionID,
-)
+from tfo_mcp.domain.valueobjects import MCPCapability, MCPLogLevel, MCPProtocolVersion, SessionID
 
 
 class SessionState(str, Enum):

@@ -5,10 +5,7 @@ import pytest
 from tfo_mcp.domain.aggregates import Conversation, Session
 from tfo_mcp.domain.aggregates.session import ClientInfo
 from tfo_mcp.domain.entities import Prompt, PromptArgument, Resource, Tool
-from tfo_mcp.domain.valueobjects import (
-    MimeType,
-    SessionID,
-)
+from tfo_mcp.domain.valueobjects import MimeType, SessionID
 from tfo_mcp.infrastructure.persistence import (
     InMemoryConversationRepository,
     InMemoryPromptRepository,

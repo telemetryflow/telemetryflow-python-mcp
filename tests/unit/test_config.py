@@ -151,7 +151,7 @@ class TestTelemetryConfig:
         """Test default telemetry config values."""
         config = TelemetryConfig()
         assert config.enabled is False
-        assert config.service_name == "telemetryflow-mcp"
+        assert config.service_name == "telemetryflow-python-mcp"
         # endpoint is the actual attribute name (not otlp_endpoint)
         assert config.endpoint == "api.telemetryflow.id:4317"
 

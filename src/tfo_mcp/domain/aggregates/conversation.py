@@ -9,11 +9,7 @@ from enum import Enum
 from typing import Any
 
 from tfo_mcp.domain.entities import Message
-from tfo_mcp.domain.events import (
-    ConversationCreatedEvent,
-    DomainEvent,
-    MessageAddedEvent,
-)
+from tfo_mcp.domain.events import ConversationCreatedEvent, DomainEvent, MessageAddedEvent
 from tfo_mcp.domain.valueobjects import ConversationID, Model, SystemPrompt
 
 

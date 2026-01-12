@@ -7,11 +7,7 @@ import pytest
 from tfo_mcp.domain.aggregates import Session, SessionCapabilities, SessionState
 from tfo_mcp.domain.aggregates.session import ClientInfo
 from tfo_mcp.domain.entities import Prompt, PromptArgument, Resource, Tool
-from tfo_mcp.domain.events import (
-    SessionClosedEvent,
-    SessionCreatedEvent,
-    SessionInitializedEvent,
-)
+from tfo_mcp.domain.events import SessionClosedEvent, SessionCreatedEvent, SessionInitializedEvent
 from tfo_mcp.domain.valueobjects import MimeType
 
 

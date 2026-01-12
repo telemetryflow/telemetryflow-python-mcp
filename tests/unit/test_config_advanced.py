@@ -198,7 +198,7 @@ class TestTelemetryConfigValidation:
         config = TelemetryConfig()
 
         assert config.enabled is False
-        assert config.service_name == "telemetryflow-mcp"
+        assert config.service_name == "telemetryflow-python-mcp"
 
     def test_enabled_telemetry(self) -> None:
         """Test enabled telemetry configuration."""

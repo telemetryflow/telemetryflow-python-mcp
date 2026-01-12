@@ -312,7 +312,7 @@ coverage-report: ## Generate merged coverage report
 # DOCKER
 # ==============================================================================
 
-DOCKER_IMAGE := telemetryflow-mcp-python
+DOCKER_IMAGE := telemetryflow-python-mcp-python
 DOCKER_TAG := $(VERSION)
 
 .PHONY: docker-build

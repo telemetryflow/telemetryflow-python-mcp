@@ -179,7 +179,7 @@ What actually happens.
 
 ## Environment
 
-- TFO-MCP Version:
+- TFO-Python-MCP Version:
 - OS:
 - Python Version:
 

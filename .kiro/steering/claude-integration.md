@@ -1,4 +1,4 @@
-# TFO-MCP Claude Integration Standards
+# TFO-Python-MCP Claude Integration Standards
 
 ## Overview
 

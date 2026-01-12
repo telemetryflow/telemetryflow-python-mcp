@@ -1,4 +1,4 @@
-# TFO-MCP Protocol Standards
+# TFO-Python-MCP Protocol Standards
 
 ## Overview
 

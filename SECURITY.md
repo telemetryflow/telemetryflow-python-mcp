@@ -152,7 +152,7 @@ flowchart TB
 export ANTHROPIC_API_KEY="your-api-key"
 
 # DO: Use secret managers in production
-ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id telemetryflow-mcp/api-key)
+ANTHROPIC_API_KEY=$(aws secretsmanager get-secret-value --secret-id telemetryflow-python-mcp/api-key)
 
 # DON'T: Put keys in config files
 # DON'T: Commit keys to version control
@@ -271,7 +271,7 @@ safety check
 bandit -r src/
 
 # Docker image scanning
-trivy image telemetryflow-mcp:latest
+trivy image telemetryflow-python-mcp:latest
 ```
 
 ### Dependency Update Policy

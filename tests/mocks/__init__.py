@@ -13,11 +13,7 @@ from tests.mocks.persistence import (
     MockSessionRepository,
     MockToolRepository,
 )
-from tests.mocks.session import (
-    mock_client_info,
-    mock_session,
-    mock_session_with_tools,
-)
+from tests.mocks.session import mock_client_info, mock_session, mock_session_with_tools
 from tests.mocks.tool import (
     MockToolHandler,
     builtin_tools,

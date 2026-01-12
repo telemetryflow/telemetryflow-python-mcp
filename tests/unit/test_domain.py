@@ -3,12 +3,7 @@
 import pytest
 
 from tfo_mcp.domain.aggregates import Conversation, ConversationStatus, Session, SessionState
-from tfo_mcp.domain.entities import (
-    Message,
-    Tool,
-    ToolResult,
-    ToolUseContent,
-)
+from tfo_mcp.domain.entities import Message, Tool, ToolResult, ToolUseContent
 from tfo_mcp.domain.events import SessionCreatedEvent
 from tfo_mcp.domain.valueobjects import (
     MCPLogLevel,

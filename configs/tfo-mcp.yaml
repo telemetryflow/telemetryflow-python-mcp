@@ -85,14 +85,14 @@ telemetry_mcp:
   enabled: true
   backend: "telemetryflow"  # telemetryflow, otel
   otlp_endpoint: "localhost:4317"
-  service_name: "telemetryflow-mcp"
+  service_name: "telemetryflow-python-mcp"
 
 # =============================================================================
 # TelemetryFlow SDK Configuration
 # =============================================================================
 telemetry:
   enabled: false
-  service_name: "telemetryflow-mcp"
+  service_name: "telemetryflow-python-mcp"
   service_version: "1.1.2"
   service_namespace: "telemetryflow"
   environment: "development"
