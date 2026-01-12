@@ -231,6 +231,13 @@ ci-test: fmt-check lint typecheck test ## Run CI pipeline (format, lint, typeche
 # CI-SPECIFIC TARGETS (GitHub Actions)
 # ==============================================================================
 
+.PHONY: ci-deps
+ci-deps: ## Install dependencies for CI (no pre-commit hooks)
+	@echo "Installing CI dependencies..."
+	$(PIP) install --upgrade pip
+	$(PIP) install -e ".[dev]"
+	@echo "CI dependencies installed"
+
 .PHONY: test-unit-ci
 test-unit-ci: ## Run unit tests for CI with coverage output
 	@echo "Running unit tests for CI..."
