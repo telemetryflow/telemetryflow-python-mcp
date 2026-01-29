@@ -273,8 +273,8 @@ ci-build: clean ## Build package for CI
 .PHONY: ci-security
 ci-security: ## Run security scan for CI
 	@echo "Running security scan (CI mode)..."
-	@$(PIP) install bandit safety 2>/dev/null || true
-	@bandit -r $(SRC_DIR)/ -f json -o bandit-results.json -ll || true
+	@$(PIP) install bandit bandit-sarif-formatter safety 2>/dev/null || true
+	@bandit -r $(SRC_DIR)/ --format sarif --output bandit-results.sarif -ll || true
 	@safety check --json > safety-results.json 2>/dev/null || true
 	@echo "Security scan complete"
 
