@@ -9,12 +9,12 @@
 
 [![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://python.org/)
+[![Python Version](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python)](https://python.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-purple?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=)](https://modelcontextprotocol.io/)
-[![LLM Providers](https://img.shields.io/badge/LLM-12_Providers_111_Models-E1BEE7?logo=anthropic)](https://anthropic.com)
-[![OTEL SDK](https://img.shields.io/badge/OpenTelemetry_SDK-1.28.0-blueviolet)](https://opentelemetry.io/)
+[![LLM Providers](https://img.shields.io/badge/LLM-12_Providers_112_Models-E1BEE7?logo=anthropic)](https://anthropic.com)
+[![TFO SDK](https://img.shields.io/badge/TFO_Python_SDK-1.2.0-blueviolet)](https://opentelemetry.io/)
 [![Architecture](https://img.shields.io/badge/Architecture-DDD%2FCQRS-success)](docs/ARCHITECTURE.md)
-[![Tests](https://img.shields.io/badge/Tests-1174_%7C_98%25-brightgreen)](docs/DEVELOPMENT.md)
+[![Tests](https://img.shields.io/badge/Tests-1174_%7C_97%25-brightgreen)](docs/DEVELOPMENT.md)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![ClickHouse](https://img.shields.io/badge/ClickHouse-23+-FFCC00?logo=clickhouse)](https://clickhouse.com/)
 
@@ -24,11 +24,11 @@
 
 **Enterprise-Grade Model Context Protocol Server with Multi-Provider LLM Integration**
 
-A comprehensive MCP server implementation built using Python and the official MCP SDK (`mcp>=1.27.0`), following Domain-Driven Design (DDD) patterns, providing seamless integration between the Model Context Protocol and 12 LLM providers with 111 models.
+A comprehensive MCP server implementation built using Python and the official MCP SDK (`mcp>=1.27.0`), following Domain-Driven Design (DDD) patterns, providing seamless integration between the Model Context Protocol and 12 LLM providers with 112 models.
 
 This server works as the **AI integration layer** for the TelemetryFlow Platform, providing:
 
-- Multi-provider LLM conversation capabilities via MCP (12 providers, 111 models)
+- Multi-provider LLM conversation capabilities via MCP (12 providers, 112 models)
 - Tool execution with 17 built-in tools (8 builtin + 4 PostgreSQL + 5 ClickHouse)
 - Resource management and prompt templates
 - TelemetryFlow SDK observability integration
@@ -42,22 +42,22 @@ This server works as the **AI integration layer** for the TelemetryFlow Platform
 graph LR
     subgraph "TelemetryFlow Ecosystem v1.2.0"
         subgraph "Instrumentation"
-            SDK_GO[TFO-Go-SDK<br/>OTEL SDK v1.39.0]
-            SDK_PY[TFO-Python-SDK<br/>OTEL SDK v1.28.0]
+            SDK_GO[TFO-Go-SDK v1.2.0<br/>OTEL SDK v1.43.0]
+            SDK_PY[TFO-Python-SDK v1.2.0<br/>OTEL SDK v1.42.1]
             SDK_OTHER[TFO-AnyStacks-SDK<br/>OTEL AnyStacks SDK]
         end
         subgraph "Collection"
-            AGENT[TFO-Agent<br/>OTEL SDK v1.39.0]
+            AGENT[TFO-Agent v1.2.0<br/>OTEL SDK v1.43.0]
         end
         subgraph "Processing"
-            COLLECTOR[TFO-Collector v1.2.1<br/>OTEL v0.142.0]
+            COLLECTOR[TFO-Collector v1.2.1<br/>OTEL v0.152.1]
         end
         subgraph "AI Integration"
-            MCP_GO[TFO-Go-MCP<br/>LLM + MCP]
-            MCP_PY[TFO-Python-MCP<br/>LLM + MCP + Context]
+            MCP_GO[TFO-Go-MCP v1.2.0<br/>LLM + MCP]
+            MCP_PY[TFO-Python-MCP v1.2.0<br/>LLM + MCP + Context]
         end
         subgraph "Platform"
-            CORE[TFO-Core<br/>NestJS IAM v1.1.4]
+            CORE[TFO-Core v1.4.0<br/>NestJS IAM]
         end
     end
 
@@ -81,15 +81,15 @@ graph LR
     style CORE fill:#B3E5FC,stroke:#0288D1
 ```
 
-| Component          | Version    | OTEL Base       | Role                              |
-| ------------------ | ---------- | --------------- | --------------------------------- |
-| TFO-Core           | v1.1.4     | -               | Identity & Access Management      |
-| TFO-Agent          | v1.1.2     | SDK v1.39.0     | Telemetry Collection Agent        |
-| TFO-Collector      | v1.1.2     | v0.142.0        | Central Telemetry Processing      |
-| TFO-Go-SDK         | v1.1.2     | SDK v1.39.0     | Go Instrumentation                |
-| TFO-Python-SDK     | v1.1.2     | SDK v1.28.0     | Python Instrumentation            |
-| TFO-Go-MCP         | v1.1.2     | SDK v1.39.0     | Go MCP Server + LLM AI            |
-| **TFO-Python-MCP** | **v1.2.0** | **TFO SDK v1.2.0** | **Python MCP Server + LLM AI** |
+| Component          | Version    | OTEL Base           | Role                              |
+| ------------------ | ---------- | ------------------- | --------------------------------- |
+| TFO-Core           | v1.4.0     | -                   | Identity & Access Management      |
+| TFO-Agent          | v1.2.0     | SDK v1.43.0         | Telemetry Collection Agent        |
+| TFO-Collector      | v1.2.1     | v0.152.1            | Central Telemetry Processing      |
+| TFO-Go-SDK         | v1.2.0     | SDK v1.43.0         | Go Instrumentation                |
+| TFO-Python-SDK     | v1.2.0     | SDK v1.42.1         | Python Instrumentation            |
+| TFO-Go-MCP         | v1.2.0     | SDK v1.43.0         | Go MCP Server + LLM AI            |
+| **TFO-Python-MCP** | **v1.2.0** | **TFO SDK v1.2.0**  | **Python MCP Server + LLM AI** |
 
 ---
 
@@ -107,7 +107,7 @@ graph LR
 | **Transport**        | stdio, SSE (planned), WebSocket (planned)               |
 | **Built-in Tools**   | 17 tools + ContextCollector + PromptBuilder              |
 | **Context Types**    | 78 context types across 8 categories                    |
-| **Supported Models** | 111 models across 12 LLM providers                     |
+| **Supported Models** | 112 models across 12 LLM providers                     |
 | **Test Coverage**    | 98% coverage, 1174 tests                                |
 | **Async Runtime**    | asyncio with async/await                                |
 
@@ -672,7 +672,7 @@ make ci-test
 
 ## LLM AI Integration
 
-### Supported Providers (12 Providers, 111 Models)
+### Supported Providers (12 Providers, 112 Models)
 
 | Provider   | Example Models                                | API Key Env Variable        |
 | ---------- | --------------------------------------------- | --------------------------- |
