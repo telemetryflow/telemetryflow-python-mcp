@@ -30,7 +30,8 @@ class TestToolHandlerExecution:
         """Create tool handler."""
         return ToolHandler(session)
 
-    def test_execute_simple_tool(self, session: Session, handler: ToolHandler) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_simple_tool(self, session: Session, handler: ToolHandler) -> None:
         """Test executing a simple tool."""
 
         async def echo_handler(input_data: dict[str, Any]) -> ToolResult:
@@ -48,22 +49,24 @@ class TestToolHandlerExecution:
         session.register_tool(tool)
 
         command = ExecuteToolCommand(tool_name="echo", arguments={"message": "Hello"})
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert not result.is_error
         assert "Hello" in result_dict["content"][0]["text"]
 
-    def test_execute_nonexistent_tool(self, handler: ToolHandler) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_nonexistent_tool(self, handler: ToolHandler) -> None:
         """Test executing a nonexistent tool."""
         command = ExecuteToolCommand(tool_name="nonexistent", arguments={})
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert result.is_error
         assert "not found" in result_dict["content"][0]["text"].lower()
 
-    def test_execute_tool_with_error(self, session: Session, handler: ToolHandler) -> None:
+    @pytest.mark.asyncio
+    async def test_execute_tool_with_error(self, session: Session, handler: ToolHandler) -> None:
         """Test executing a tool that raises an error."""
 
         async def error_handler(_input_data: dict[str, Any]) -> ToolResult:
@@ -78,7 +81,7 @@ class TestToolHandlerExecution:
         session.register_tool(tool)
 
         command = ExecuteToolCommand(tool_name="error_tool", arguments={})
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert result.is_error
@@ -95,7 +98,8 @@ class TestToolHandlerWithMocks:
         session.is_ready = True
         return session
 
-    def test_tool_execution_calls_handler(self) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_execution_calls_handler(self) -> None:
         """Test that tool execution calls the handler function."""
         mock_handler = mock.AsyncMock(return_value=ToolResult.text("Success"))
 
@@ -113,11 +117,12 @@ class TestToolHandlerWithMocks:
         handler = ToolHandler(session)
         command = ExecuteToolCommand(tool_name="mock_tool", arguments={"key": "value"})
 
-        asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        await handler.handle_execute(command)
 
         mock_handler.assert_called_once_with({"key": "value"})
 
-    def test_tool_execution_with_telemetry(self) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_execution_with_telemetry(self) -> None:
         """Test tool execution records telemetry."""
         session = Session.create()
         session.initialize(ClientInfo(name="test", version="1.0"))
@@ -138,7 +143,6 @@ class TestToolHandlerWithMocks:
         ) as mock_get:
             mock_telemetry = mock.MagicMock()
             mock_telemetry.is_enabled = True
-            # Mock the context manager for span
             mock_span = mock.MagicMock()
             mock_span.__enter__ = mock.MagicMock(return_value=mock_span)
             mock_span.__exit__ = mock.MagicMock(return_value=False)
@@ -148,9 +152,8 @@ class TestToolHandlerWithMocks:
             handler = ToolHandler(session)
             command = ExecuteToolCommand(tool_name="telemetry_tool", arguments={})
 
-            asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+            await handler.handle_execute(command)
 
-            # Telemetry should have been recorded (record_tool_call is the actual method)
             mock_telemetry.record_tool_call.assert_called()
 
 
@@ -164,7 +167,8 @@ class TestToolHandlerEdgeCases:
         session.initialize(ClientInfo(name="test", version="1.0"))
         return session
 
-    def test_empty_arguments(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_empty_arguments(self, session: Session) -> None:
         """Test executing tool with empty arguments."""
 
         async def no_args_handler(_input: dict[str, Any]) -> ToolResult:
@@ -181,11 +185,12 @@ class TestToolHandlerEdgeCases:
         handler = ToolHandler(session)
         command = ExecuteToolCommand(tool_name="no_args", arguments={})
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
 
         assert not result.is_error
 
-    def test_large_arguments(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_large_arguments(self, session: Session) -> None:
         """Test executing tool with large argument data."""
 
         async def large_handler(input_data: dict[str, Any]) -> ToolResult:
@@ -203,11 +208,12 @@ class TestToolHandlerEdgeCases:
         large_data = {"data": "x" * 100000}
         command = ExecuteToolCommand(tool_name="large_args", arguments=large_data)
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
 
         assert not result.is_error
 
-    def test_special_characters_in_arguments(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_special_characters_in_arguments(self, session: Session) -> None:
         """Test executing tool with special characters."""
 
         async def special_handler(input_data: dict[str, Any]) -> ToolResult:
@@ -225,7 +231,7 @@ class TestToolHandlerEdgeCases:
         special_text = "Hello! @#$%^&*() 日本語 🎉"
         command = ExecuteToolCommand(tool_name="special_chars", arguments={"text": special_text})
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert not result.is_error
@@ -263,7 +269,6 @@ class TestToolHandlerConcurrency:
 
         handler = ToolHandler(session)
 
-        # Execute 10 concurrent calls
         commands = [
             ExecuteToolCommand(tool_name="concurrent_tool", arguments={"i": i}) for i in range(10)
         ]
@@ -301,7 +306,6 @@ class TestToolHandlerConcurrency:
 
         await asyncio.gather(*[handler.handle_execute(cmd) for cmd in commands])
 
-        # All indices should be recorded
         assert sorted(shared_state) == [0, 1, 2, 3, 4]
 
 
@@ -315,7 +319,8 @@ class TestToolHandlerResultFormats:
         session.initialize(ClientInfo(name="test", version="1.0"))
         return session
 
-    def test_text_result_format(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_text_result_format(self, session: Session) -> None:
         """Test text result format."""
 
         async def text_handler(_input: dict[str, Any]) -> ToolResult:
@@ -332,13 +337,14 @@ class TestToolHandlerResultFormats:
         handler = ToolHandler(session)
         command = ExecuteToolCommand(tool_name="text_tool", arguments={})
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert "content" in result_dict
         assert result_dict["content"][0]["type"] == "text"
 
-    def test_json_result_format(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_json_result_format(self, session: Session) -> None:
         """Test JSON result format."""
 
         async def json_handler(_input: dict[str, Any]) -> ToolResult:
@@ -355,13 +361,14 @@ class TestToolHandlerResultFormats:
         handler = ToolHandler(session)
         command = ExecuteToolCommand(tool_name="json_tool", arguments={})
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert not result.is_error
         assert "key" in result_dict["content"][0]["text"]
 
-    def test_error_result_format(self, session: Session) -> None:
+    @pytest.mark.asyncio
+    async def test_error_result_format(self, session: Session) -> None:
         """Test error result format."""
 
         async def error_handler(_input: dict[str, Any]) -> ToolResult:
@@ -378,7 +385,7 @@ class TestToolHandlerResultFormats:
         handler = ToolHandler(session)
         command = ExecuteToolCommand(tool_name="error_tool", arguments={})
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle_execute(command))
+        result = await handler.handle_execute(command)
         result_dict = result.to_dict()
 
         assert result_dict.get("isError") is True
