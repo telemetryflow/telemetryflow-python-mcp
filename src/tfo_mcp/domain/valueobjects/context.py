@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class ContextType(str, Enum):
+class ContextType(StrEnum):
     """TFO Platform context types."""
 
     METRICS = "metrics"
@@ -88,7 +88,7 @@ class ContextType(str, Enum):
     DB_MONITORING_QAN = "db-monitoring-qan"
 
 
-class InsightType(str, Enum):
+class InsightType(StrEnum):
     """Telemetry insight types."""
 
     CHRONOLOGY = "chronology"

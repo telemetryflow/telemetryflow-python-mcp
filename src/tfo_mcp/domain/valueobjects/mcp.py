@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import IntEnum, StrEnum
 from typing import Self
 
 
-class MCPMethod(str, Enum):
+class MCPMethod(StrEnum):
     """MCP protocol methods."""
 
     # Lifecycle
@@ -50,7 +50,7 @@ class MCPMethod(str, Enum):
     NOTIFICATION_PROMPTS_LIST_CHANGED = "notifications/prompts/list_changed"
 
 
-class MCPCapability(str, Enum):
+class MCPCapability(StrEnum):
     """MCP server capabilities."""
 
     TOOLS = "tools"
@@ -61,7 +61,7 @@ class MCPCapability(str, Enum):
     EXPERIMENTAL = "experimental"
 
 
-class MCPLogLevel(str, Enum):
+class MCPLogLevel(StrEnum):
     """MCP log levels (RFC 5424)."""
 
     DEBUG = "debug"

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Self
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     """Message role."""
 
     USER = "user"
@@ -15,7 +15,7 @@ class Role(str, Enum):
     SYSTEM = "system"
 
 
-class ProviderType(str, Enum):
+class ProviderType(StrEnum):
     """LLM provider types."""
 
     ANTHROPIC = "anthropic"
@@ -32,7 +32,7 @@ class ProviderType(str, Enum):
     CUSTOM = "custom"
 
 
-class Model(str, Enum):
+class Model(StrEnum):
     """LLM models from TelemetryFlow Platform seed data."""
 
     # Anthropic Claude (11 models)
@@ -219,7 +219,7 @@ class Model(str, Enum):
         return None
 
 
-class ContentType(str, Enum):
+class ContentType(StrEnum):
     """Content block types."""
 
     TEXT = "text"
@@ -228,7 +228,7 @@ class ContentType(str, Enum):
     TOOL_RESULT = "tool_result"
 
 
-class MimeType(str, Enum):
+class MimeType(StrEnum):
     """Common MIME types."""
 
     # Text types

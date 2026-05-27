@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from tfo_mcp.domain.entities import Prompt, Resource, Tool
@@ -18,7 +18,7 @@ from tfo_mcp.domain.events import (
 from tfo_mcp.domain.valueobjects import MCPCapability, MCPLogLevel, MCPProtocolVersion, SessionID
 
 
-class SessionState(str, Enum):
+class SessionState(StrEnum):
     """Session lifecycle states."""
 
     CREATED = "created"

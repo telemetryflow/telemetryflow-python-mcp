@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from tfo_mcp.domain.entities import Message
@@ -13,7 +13,7 @@ from tfo_mcp.domain.events import ConversationCreatedEvent, DomainEvent, Message
 from tfo_mcp.domain.valueobjects import ConversationID, Model, SystemPrompt
 
 
-class ConversationStatus(str, Enum):
+class ConversationStatus(StrEnum):
     """Conversation status."""
 
     ACTIVE = "active"
