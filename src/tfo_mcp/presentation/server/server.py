@@ -98,11 +98,11 @@ class MCPServer:
         self._prompt_generators[name] = generator
 
     def _setup_handlers(self) -> None:
-        @self._server.list_tools()  # type: ignore[misc, no-untyped-call]
+        @self._server.list_tools()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def list_tools() -> list[types.Tool]:
             return list(self._tool_definitions.values())
 
-        @self._server.call_tool()  # type: ignore[misc]
+        @self._server.call_tool()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def call_tool(
             name: str, arguments: dict[str, Any]
         ) -> list[types.TextContent | types.ImageContent]:
@@ -123,15 +123,15 @@ class MCPServer:
             except Exception as e:
                 return [types.TextContent(type="text", text=f"Error: {e}")]
 
-        @self._server.list_resources()  # type: ignore[misc, no-untyped-call]
+        @self._server.list_resources()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def list_resources() -> list[types.Resource]:
             return self._resource_definitions
 
-        @self._server.list_resource_templates()  # type: ignore[misc, no-untyped-call]
+        @self._server.list_resource_templates()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def list_resource_templates() -> list[types.ResourceTemplate]:
             return self._template_definitions
 
-        @self._server.read_resource()  # type: ignore[misc, no-untyped-call]
+        @self._server.read_resource()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def read_resource(uri: Any) -> str | bytes:
             uri_str = str(uri)
 
@@ -157,11 +157,11 @@ class MCPServer:
                     return result.blob
             return str(result)
 
-        @self._server.list_prompts()  # type: ignore[misc, no-untyped-call]
+        @self._server.list_prompts()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def list_prompts() -> list[types.Prompt]:
             return list(self._prompt_definitions.values())
 
-        @self._server.get_prompt()  # type: ignore[misc, no-untyped-call]
+        @self._server.get_prompt()  # type: ignore[misc, no-untyped-call, untyped-decorator]
         async def get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPromptResult:
             generator = self._prompt_generators.get(name)
             if generator is None:

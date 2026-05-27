@@ -125,6 +125,10 @@ module = [
 ]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["tfo_mcp.presentation.server.server"]
+warn_unused_ignores = false
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
