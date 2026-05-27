@@ -1,6 +1,12 @@
 """Value objects - Immutable domain primitives."""
 
 from tfo_mcp.domain.valueobjects.content import ContentType, MimeType, Model, Role, SystemPrompt
+from tfo_mcp.domain.valueobjects.context import (
+    ContextType,
+    InsightType,
+    TelemetryContext,
+    TimeRange,
+)
 from tfo_mcp.domain.valueobjects.identifiers import (
     ConversationID,
     MessageID,
@@ -36,4 +42,8 @@ __all__ = [
     "ContentType",
     "SystemPrompt",
     "MimeType",
+    "ContextType",
+    "InsightType",
+    "TelemetryContext",
+    "TimeRange",
 ]

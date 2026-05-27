@@ -76,7 +76,7 @@ class ServerConfig(BaseSettings):
     )
 
     name: str = Field(default="TelemetryFlow-MCP", description="Server name")
-    version: str = Field(default="1.1.2", description="Server version")
+    version: str = Field(default="1.2.0", description="Server version")
     host: str = Field(default="localhost", description="Server host")
     port: int = Field(default=8080, description="Server port")
     transport: str = Field(default="stdio", description="Transport type (stdio, sse, websocket)")
@@ -174,7 +174,7 @@ class TelemetryConfig(BaseSettings):
 
     enabled: bool = Field(default=False, description="Enable telemetry")
     service_name: str = Field(default="telemetryflow-python-mcp", description="Service name")
-    service_version: str = Field(default="1.1.2", description="Service version")
+    service_version: str = Field(default="1.2.0", description="Service version")
     service_namespace: str = Field(default="telemetryflow", description="Service namespace")
     environment: str = Field(default="production", description="Deployment environment")
 

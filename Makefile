@@ -1,11 +1,11 @@
 # ==============================================================================
 # TelemetryFlow Python MCP Server Makefile - Python Implementation
-# Version: 1.1.2
+# Version: 1.2.0
 # ==============================================================================
 
 # Build variables
 PACKAGE_NAME := tfo-mcp
-VERSION := 1.1.2
+VERSION := 1.2.0
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 PYTHON_VERSION := $(shell python --version 2>&1 | cut -d ' ' -f 2)

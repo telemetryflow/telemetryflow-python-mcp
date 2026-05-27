@@ -1,6 +1,6 @@
 # TelemetryFlow Python MCP Server - Configuration Guide
 
-This document describes all configuration options for the TelemetryFlow Python MCP Server.
+This document describes all configuration options for the TelemetryFlow Python MCP Server v1.2.0.
 
 ## Configuration Sources
 
@@ -177,7 +177,7 @@ classDiagram
 ```yaml
 server:
   name: "TelemetryFlow-MCP" # Server name
-  version: "1.1.2" # Server version
+  version: "1.2.0" # Server version
   host: "localhost" # Host (for future HTTP transports)
   port: 8080 # Port (for future HTTP transports)
   transport: "stdio" # Transport type: stdio, sse, websocket
@@ -189,7 +189,7 @@ server:
 | Option        | Environment Variable                     | Default           | Description       |
 | ------------- | ---------------------------------------- | ----------------- | ----------------- |
 | name          | `TELEMETRYFLOW_MCP_SERVER_NAME`          | TelemetryFlow-MCP | Server name       |
-| version       | `TELEMETRYFLOW_MCP_SERVER_VERSION`       | 1.1.2             | Server version    |
+| version       | `TELEMETRYFLOW_MCP_SERVER_VERSION`       | 1.2.0             | Server version    |
 | host          | `TELEMETRYFLOW_MCP_SERVER_HOST`          | localhost         | Server host       |
 | port          | `TELEMETRYFLOW_MCP_SERVER_PORT`          | 8080              | Server port       |
 | transport     | `TELEMETRYFLOW_MCP_SERVER_TRANSPORT`     | stdio             | Transport type    |
@@ -225,29 +225,61 @@ claude:
 
 ### Available Models
 
+The server supports 12 LLM providers with 111 models total.
+
 ```mermaid
-graph LR
-    subgraph Claude4["Claude 4"]
-        Opus["claude-opus-4-20250514<br/>Most Capable"]
-        Sonnet4["claude-sonnet-4-20250514<br/>Balanced"]
+graph TB
+    subgraph Providers["12 LLM Providers"]
+        subgraph Anthropic["Anthropic"]
+            Opus["claude-opus-4-20250514"]
+            Sonnet4["claude-sonnet-4-20250514<br/>(default)"]
+        end
+
+        subgraph Google["Google"]
+            GeminiPro["gemini-2.5-pro"]
+            GeminiFlash["gemini-2.5-flash"]
+        end
+
+        subgraph OpenAI["OpenAI"]
+            GPT4o["gpt-4o"]
+            o3["o3"]
+            o4mini["o4-mini"]
+        end
+
+        subgraph Others["Other Providers"]
+            DeepSeek["DeepSeek-V3, R1"]
+            Qwen["Qwen3-235B, 32B"]
+            Ollama["llama3, mistral (local)"]
+            Mistral["Mistral Large, Codestral"]
+            Grok["grok-3, grok-3-mini"]
+            Kimi["moonshot-v1-128k"]
+            Zhipu["GLM-4, GLM-4-Plus"]
+            MiMo["MiMo-7B"]
+            Custom["Any OpenAI-compatible"]
+        end
     end
 
-    subgraph Claude35["Claude 3.5"]
-        Sonnet35["claude-3-5-sonnet-20241022"]
-        Haiku35["claude-3-5-haiku-20241022<br/>Fast"]
-    end
-
-    Opus -.->|"More capable"| Sonnet4
-    Sonnet4 -.->|"More capable"| Sonnet35
-    Sonnet35 -.->|"More capable"| Haiku35
+    style Sonnet4 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style Anthropic fill:#FFCDD2,stroke:#C62828
+    style Google fill:#BBDEFB,stroke:#1976D2
+    style OpenAI fill:#C8E6C9,stroke:#388E3C
+    style Others fill:#FFE0B2,stroke:#F57C00
 ```
 
-| Model ID                   | Description                  |
-| -------------------------- | ---------------------------- |
-| claude-opus-4-20250514     | Claude 4 Opus - Most capable |
-| claude-sonnet-4-20250514   | Claude 4 Sonnet - Balanced   |
-| claude-3-5-sonnet-20241022 | Claude 3.5 Sonnet            |
-| claude-3-5-haiku-20241022  | Claude 3.5 Haiku - Fast      |
+| Provider  | Example Models                                                                                                  | API Key Env Variable |
+| --------- | --------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Anthropic | `claude-opus-4-20250514`, `claude-sonnet-4-20250514`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022` | `ANTHROPIC_API_KEY`  |
+| Google    | `gemini-2.5-pro`, `gemini-2.5-flash`                                                                            | `GOOGLE_API_KEY`     |
+| OpenAI    | `gpt-4o`, `gpt-4o-mini`, `o3`, `o4-mini`                                                                        | `OPENAI_API_KEY`     |
+| DeepSeek  | `deepseek-v3`, `deepseek-r1`                                                                                    | `DEEPSEEK_API_KEY`   |
+| Qwen      | `qwen3-235b`, `qwen3-32b`                                                                                       | `QWEN_API_KEY`       |
+| Ollama    | `llama3`, `mistral`, `codellama`                                                                                | `OLLAMA_HOST`        |
+| Mistral   | `mistral-large`, `codestral`                                                                                    | `MISTRAL_API_KEY`    |
+| Grok      | `grok-3`, `grok-3-mini`                                                                                         | `XAI_API_KEY`        |
+| Kimi      | `moonshot-v1-128k`, `moonshot-v1-32k`                                                                           | `MOONSHOT_API_KEY`   |
+| Zhipu     | `glm-4`, `glm-4-plus`, `glm-4-flash`                                                                            | `ZHIPU_API_KEY`      |
+| MiMo      | `mimo-7b`                                                                                                       | `MIMO_API_KEY`       |
+| Custom    | Any OpenAI-compatible endpoint                                                                                  | `CUSTOM_LLM_API_KEY` |
 
 ---
 
@@ -359,31 +391,52 @@ queue:
 
 ## Database Configuration (PostgreSQL)
 
+The default database name is `telemetryflow_db`, aligned with the TFO Python-SDK conventions.
+
 ```yaml
 database:
-  postgres_url: "postgres://telemetryflow:telemetryflow@localhost:5432/tfo_mcp?sslmode=disable"
+  postgres_url: "postgres://tfo_admin:password@localhost:5432/telemetryflow_db?sslmode=disable"
   postgres_max_conns: 25 # Maximum connections
   postgres_min_conns: 5 # Minimum connections
 ```
 
-| Option             | Environment Variable                   | Default                          | Description     |
-| ------------------ | -------------------------------------- | -------------------------------- | --------------- |
-| postgres_url       | `TELEMETRYFLOW_MCP_POSTGRES_URL`       | postgres://...localhost:5432/... | PostgreSQL URL  |
-| postgres_max_conns | `TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS` | 25                               | Max connections |
-| postgres_min_conns | `TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS` | 5                                | Min connections |
+| Option             | Environment Variable                   | Default                                       | Description     |
+| ------------------ | -------------------------------------- | --------------------------------------------- | --------------- |
+| postgres_url       | `TELEMETRYFLOW_MCP_POSTGRES_URL`       | postgres://...localhost:5432/telemetryflow_db | PostgreSQL URL  |
+| postgres_max_conns | `TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS` | 25                                            | Max connections |
+| postgres_min_conns | `TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS` | 5                                             | Min connections |
 
 ---
 
 ## Analytics Configuration (ClickHouse)
 
+The default database name is `telemetryflow_db`, aligned with the TFO Python-SDK conventions.
+
 ```yaml
 analytics:
-  clickhouse_url: "clickhouse://localhost:9000/tfo_mcp_analytics"
+  clickhouse_url: "clickhouse://localhost:9000/telemetryflow_db"
 ```
 
-| Option         | Environment Variable               | Default                                       | Description    |
-| -------------- | ---------------------------------- | --------------------------------------------- | -------------- |
-| clickhouse_url | `TELEMETRYFLOW_MCP_CLICKHOUSE_URL` | clickhouse://localhost:9000/tfo_mcp_analytics | ClickHouse URL |
+| Option         | Environment Variable               | Default                                      | Description    |
+| -------------- | ---------------------------------- | -------------------------------------------- | -------------- |
+| clickhouse_url | `TELEMETRYFLOW_MCP_CLICKHOUSE_URL` | clickhouse://localhost:9000/telemetryflow_db | ClickHouse URL |
+
+---
+
+## ContextCollector Configuration
+
+The ContextCollector service connects to the same PostgreSQL and ClickHouse instances configured in the database sections above. No additional configuration is needed beyond:
+
+- `TELEMETRYFLOW_MCP_POSTGRES_URL` — PostgreSQL connection for non-timescale contexts
+- `TELEMETRYFLOW_MCP_CLICKHOUSE_URL` — ClickHouse connection for timescale contexts
+
+The service uses lazy imports for `asyncpg` and `clickhouse_connect` to avoid hard dependencies.
+
+---
+
+## PromptBuilder Configuration
+
+The PromptBuilder service requires no external configuration. It uses the built-in `SYSTEM_PROMPTS` dictionary with 60+ specialized analyst personas. Available via the `tfo_collect_context` MCP tool.
 
 ---
 
@@ -410,13 +463,13 @@ telemetry_mcp:
 
 ## TelemetryFlow SDK Configuration
 
-This section configures the TelemetryFlow Python SDK for observability.
+This section configures the TelemetryFlow Python SDK (`telemetryflow-sdk>=1.2.0`) for observability.
 
 ```yaml
 telemetry:
   enabled: false # Enable TelemetryFlow SDK
   service_name: "telemetryflow-python-mcp" # Service name
-  service_version: "1.1.2" # Service version
+  service_version: "1.2.0" # Service version
   service_namespace: "telemetryflow" # Service namespace
   environment: "development" # Environment
 
@@ -457,7 +510,7 @@ telemetry:
 | ----------------- | --------------------------------- | ------------------------ | ----------------- |
 | enabled           | `TELEMETRYFLOW_ENABLED`           | false                    | Enable SDK        |
 | service_name      | `TELEMETRYFLOW_SERVICE_NAME`      | telemetryflow-python-mcp | Service name      |
-| service_version   | `TELEMETRYFLOW_SERVICE_VERSION`   | 1.1.2                    | Service version   |
+| service_version   | `TELEMETRYFLOW_SERVICE_VERSION`   | 1.2.0                    | Service version   |
 | service_namespace | `TELEMETRYFLOW_SERVICE_NAMESPACE` | telemetryflow            | Service namespace |
 | environment       | `TELEMETRYFLOW_ENVIRONMENT`       | production               | Environment       |
 
@@ -501,6 +554,44 @@ telemetry:
 
 ---
 
+## Docker Compose Profiles
+
+The `docker-compose.yaml` supports 5 profiles for different deployment scenarios. All services communicate over the `telemetryflow_python_mcp_net` network.
+
+### Profile Summary
+
+| Profile         | Command                                        | Description                    | Additional Services                                     |
+| --------------- | ---------------------------------------------- | ------------------------------ | ------------------------------------------------------- |
+| `dev`           | `docker-compose --profile dev up -d`           | Development with TFO-Collector | tfo-collector (OCB Native v1.2.1)                       |
+| `full`          | `docker-compose --profile full up -d`          | Full observability stack       | tfo-collector                                           |
+| `platform`      | `docker-compose --profile platform up -d`      | Full TFO Platform stack        | postgres, clickhouse, redis, nats, tfo-backend, tfo-viz |
+| `analytics`     | `docker-compose --profile analytics up -d`     | ClickHouse analytics only      | clickhouse                                              |
+| `observability` | `docker-compose --profile observability up -d` | Observability tools            | prometheus, jaeger, grafana                             |
+
+### Container Names
+
+All containers use the `telemetryflow_mcp_*` prefix pattern:
+
+| Service       | Container Name                    | Network IP     |
+| ------------- | --------------------------------- | -------------- |
+| tfo-mcp       | `telemetryflow_mcp_server`        | 172.154.152.10 |
+| tfo-collector | `telemetryflow_mcp_tfo_collector` | 172.154.152.30 |
+| postgres      | `telemetryflow_mcp_postgres`      | 172.154.153.20 |
+| clickhouse    | `telemetryflow_mcp_clickhouse`    | 172.154.153.40 |
+| redis         | `telemetryflow_mcp_redis`         | 172.154.153.50 |
+| nats          | `telemetryflow_mcp_nats`          | 172.154.153.55 |
+| tfo-backend   | `telemetryflow_mcp_backend`       | 172.154.153.10 |
+| tfo-viz       | `telemetryflow_mcp_frontend`      | 172.154.153.15 |
+| prometheus    | `telemetryflow_mcp_prometheus`    | 172.154.152.70 |
+| jaeger        | `telemetryflow_mcp_jaeger`        | 172.154.152.80 |
+| grafana       | `telemetryflow_mcp_grafana`       | 172.154.152.90 |
+
+### Network
+
+All services run on the `telemetryflow_python_mcp_net` bridge network (subnet `172.154.0.0/16`).
+
+---
+
 ## Example Configurations
 
 ### Development
@@ -511,7 +602,7 @@ server:
   debug: true
 
 claude:
-  default_model: "claude-3-5-haiku-20241022"
+  default_model: "claude-sonnet-4-20250514"
   max_tokens: 2048
 
 logging:
@@ -547,7 +638,7 @@ cache:
   cache_ttl: 600
 
 database:
-  postgres_url: "postgres://telemetryflow:password@postgres:5432/tfo_mcp"
+  postgres_url: "postgres://tfo_admin:password@postgres:5432/telemetryflow_db"
   postgres_max_conns: 50
 
 telemetry_mcp:
@@ -575,10 +666,10 @@ queue:
   nats_url: "nats://nats:4222"
 
 database:
-  postgres_url: "postgres://telemetryflow:telemetryflow@postgres:5432/tfo_mcp"
+  postgres_url: "postgres://tfo_admin:password@postgres:5432/telemetryflow_db"
 
 analytics:
-  clickhouse_url: "clickhouse://clickhouse:9000/tfo_mcp_analytics"
+  clickhouse_url: "clickhouse://clickhouse:9000/telemetryflow_db"
 
 telemetry_mcp:
   enabled: true
@@ -621,4 +712,5 @@ This creates `tfo-mcp.yaml` in the current directory.
 - [Installation Guide](INSTALLATION.md)
 - [Commands Reference](COMMANDS.md)
 - [Architecture Guide](ARCHITECTURE.md)
+- [Development Guide](DEVELOPMENT.md)
 - [Troubleshooting](TROUBLESHOOTING.md)

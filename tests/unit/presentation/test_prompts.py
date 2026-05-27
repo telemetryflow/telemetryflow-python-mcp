@@ -2,7 +2,6 @@
 
 import pytest
 
-from tfo_mcp.domain.aggregates import Session
 from tfo_mcp.domain.entities import Prompt, PromptArgument, PromptMessage
 from tfo_mcp.domain.valueobjects import Role
 from tfo_mcp.presentation.prompts.builtin_prompts import (
@@ -147,43 +146,32 @@ class TestPromptRegistration:
     """Test prompt registration."""
 
     @pytest.fixture
-    def session(self):
-        """Create test session."""
-        return Session.create()
+    def mcp_server(self):
+        from tfo_mcp.infrastructure.config import Config
+        from tfo_mcp.presentation.server import MCPServer
 
-    def test_register_builtin_prompts(self, session):
-        """Test registering built-in prompts."""
-        register_builtin_prompts(session)
+        config = Config()
+        return MCPServer(config)
 
-        # Check code_review prompt
-        code_review = session.get_prompt("code_review")
-        assert code_review is not None
-        assert str(code_review.name) == "code_review"
+    def test_register_builtin_prompts(self, mcp_server):
+        register_builtin_prompts(mcp_server)
 
-        # Check explain_code prompt
-        explain_code = session.get_prompt("explain_code")
-        assert explain_code is not None
+        assert "code_review" in mcp_server._prompt_definitions
+        assert "explain_code" in mcp_server._prompt_definitions
+        assert "debug_help" in mcp_server._prompt_definitions
 
-        # Check debug_help prompt
-        debug_help = session.get_prompt("debug_help")
-        assert debug_help is not None
+    def test_prompt_count(self, mcp_server):
+        register_builtin_prompts(mcp_server)
 
-    def test_prompt_count(self, session):
-        """Test prompt count after registration."""
-        initial_count = len(session.list_prompts())
-        register_builtin_prompts(session)
+        assert len(mcp_server._prompt_definitions) >= 3
 
-        final_count = len(session.list_prompts())
-        assert final_count >= initial_count + 3  # At least 3 prompts
+    def test_prompt_arguments(self, mcp_server):
+        register_builtin_prompts(mcp_server)
 
-    def test_prompt_arguments(self, session):
-        """Test prompt arguments are configured."""
-        register_builtin_prompts(session)
-
-        code_review = session.get_prompt("code_review")
+        code_review = mcp_server._prompt_definitions["code_review"]
+        assert code_review.arguments is not None
         assert len(code_review.arguments) >= 1
 
-        # Code argument should be required
         code_arg = next(
             (arg for arg in code_review.arguments if arg.name == "code"),
             None,

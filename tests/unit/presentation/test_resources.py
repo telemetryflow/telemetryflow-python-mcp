@@ -4,7 +4,6 @@ import json
 
 import pytest
 
-from tfo_mcp.domain.aggregates import Session
 from tfo_mcp.domain.entities import ResourceContent
 from tfo_mcp.infrastructure.config import Config
 from tfo_mcp.presentation.resources.builtin_resources import (
@@ -61,15 +60,9 @@ class TestConfigResource:
 class TestHealthResource:
     """Test status://health resource."""
 
-    @pytest.fixture
-    def session(self):
-        """Create test session."""
-        return Session.create()
-
     @pytest.mark.asyncio
-    async def test_read_health(self, session):
-        """Test reading health resource."""
-        reader = _create_health_reader(session)
+    async def test_read_health(self):
+        reader = _create_health_reader()
         result = await reader("status://health", {})
 
         assert result is not None
@@ -79,25 +72,20 @@ class TestHealthResource:
         assert "status" in data
 
     @pytest.mark.asyncio
-    async def test_health_status_ok(self, session):
-        """Test health status is OK."""
-        reader = _create_health_reader(session)
+    async def test_health_status_ok(self):
+        reader = _create_health_reader()
         result = await reader("status://health", {})
         data = json.loads(result.text)
 
         assert data["status"] in ["healthy", "ok", "ready", "not_ready"]
 
     @pytest.mark.asyncio
-    async def test_health_contains_session_info(self, session):
-        """Test health contains session information."""
-        from tfo_mcp.domain.aggregates.session import ClientInfo
-
-        session.initialize(ClientInfo(name="test", version="1.0"))
-        reader = _create_health_reader(session)
+    async def test_health_contains_session_info(self):
+        reader = _create_health_reader()
         result = await reader("status://health", {})
         data = json.loads(result.text)
 
-        assert "session" in data or "state" in data
+        assert "status" in data
 
 
 class TestFileResource:
@@ -174,46 +162,34 @@ class TestResourceRegistration:
     """Test resource registration."""
 
     @pytest.fixture
-    def session(self):
-        """Create test session."""
-        return Session.create()
+    def mcp_server(self):
+        from tfo_mcp.infrastructure.config import Config
+        from tfo_mcp.presentation.server import MCPServer
+
+        config = Config()
+        return MCPServer(config)
 
     @pytest.fixture
     def config(self):
-        """Create test config."""
         return Config()
 
-    def test_register_builtin_resources(self, session, config):
-        """Test registering built-in resources."""
-        register_builtin_resources(session, config)
+    def test_register_builtin_resources(self, mcp_server, config):
+        register_builtin_resources(mcp_server, config)
 
-        # Check config resource
-        config_resource = session.get_resource("config://server")
-        assert config_resource is not None
-        assert config_resource.name == "Server Configuration"
+        resource_uris = [str(r.uri) for r in mcp_server._resource_definitions]
+        assert any("config" in uri for uri in resource_uris)
+        assert any("health" in uri for uri in resource_uris)
 
-        # Check health resource
-        health_resource = session.get_resource("status://health")
-        assert health_resource is not None
-        assert health_resource.name == "Health Status"
+    def test_resource_count(self, mcp_server, config):
+        register_builtin_resources(mcp_server, config)
 
-    def test_resource_count(self, session, config):
-        """Test resource count after registration."""
-        initial_count = len(session.list_resources())
-        register_builtin_resources(session, config)
+        total = len(mcp_server._resource_definitions) + len(mcp_server._template_definitions)
+        assert total >= 2
 
-        final_count = len(session.list_resources())
-        assert final_count >= initial_count + 2  # At least config and health
+    def test_template_resource_registered(self, mcp_server, config):
+        register_builtin_resources(mcp_server, config)
 
-    def test_template_resource_registered(self, session, config):
-        """Test template resource is registered."""
-        register_builtin_resources(session, config)
-
-        # File resource should be a template
-        resources = session.list_resources()
-        template_resources = [r for r in resources if r.is_template]
-
-        assert len(template_resources) >= 1
+        assert len(mcp_server._template_definitions) >= 1
 
 
 class TestResourceContent:

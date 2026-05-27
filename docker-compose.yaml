@@ -1,60 +1,112 @@
-# TelemetryFlow Python MCP Server - Docker Compose Configuration
-# Full stack deployment with optional services
+# =============================================================================
+# TelemetryFlow Python MCP Server - Docker Compose
+# =============================================================================
+#
+# TelemetryFlow Python MCP Server - Community Enterprise Observability Platform (CEOP)
+# Copyright (c) 2024-2026 Telemetri Data Indonesia. All rights reserved.
+#
+# PROFILES:
+# - dev:            Development environment (tfo-collector)
+# - full:           Full observability stack (+ tfo-collector)
+# - platform:       Full TFO Platform stack (+ tfo-backend, tfo-viz, postgres, clickhouse, redis, nats)
+# - analytics:      Analytics stack (+ clickhouse)
+# - observability:  Observability tools (+ jaeger, prometheus, grafana)
+#
+# Usage:
+#   # Build MCP image
+#   docker-compose build
+#
+#   # Start MCP server with collector
+#   docker-compose --profile dev up -d
+#
+#   # Start full observability stack
+#   docker-compose --profile full up -d
+#
+#   # Start full TFO Platform stack
+#   docker-compose --profile platform up -d
+#
+# =============================================================================
+# OTLP HTTP Endpoints (Dual Ingestion Support)
+# =============================================================================
+#
+#   TelemetryFlow Platform (Recommended - TFO Standalone):
+#     POST http://localhost:4318/v2/traces
+#     POST http://localhost:4318/v2/metrics
+#     POST http://localhost:4318/v2/logs
+#
+#   OTEL Community (Backwards Compatible - OCB/Standard):
+#     POST http://localhost:4318/v1/traces
+#     POST http://localhost:4318/v1/metrics
+#     POST http://localhost:4318/v1/logs
+#
+#   gRPC (Both versions via same port):
+#     localhost:4317
+#
+#   NOTE: v2 endpoints require TFO Standalone build.
+#         OCB builds support v1 endpoints only.
+#
+# =============================================================================
 
+#================================================================================================
+# NETWORK SETUP
+#================================================================================================
+networks:
+  telemetryflow_python_mcp_net:
+    name: telemetryflow_python_mcp_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.154.0.0/16
+
+#================================================================================================
+# SERVICES
+#================================================================================================
 services:
-  # ============================================
-  # TelemetryFlow Python MCP Server
-  # ============================================
+
+  #==============================================================================================
+  # MCP SERVICES
+  #==============================================================================================
+
+  #----------------------------------------------------------------------------------------------
+  # TFO-MCP - TelemetryFlow Python MCP Server
+  #----------------------------------------------------------------------------------------------
   tfo-mcp:
+    container_name: ${CONTAINER_NAME:-telemetryflow_mcp_server}
+    image: ${IMAGE_NAME:-telemetryflow/telemetryflow-python-mcp}:${IMAGE_TAG:-1.2.0}
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
       args:
-        - TELEMETRYFLOW_MCP_VERSION=${TELEMETRYFLOW_MCP_VERSION:-1.1.2}
-    container_name: tfo-mcp
+        VERSION: ${VERSION:-1.2.0}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        GIT_BRANCH: ${GIT_BRANCH:-main}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
     restart: unless-stopped
     environment:
-      # Claude API
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      # Server Configuration
-      - TELEMETRYFLOW_MCP_SERVER_HOST=${TELEMETRYFLOW_MCP_SERVER_HOST:-localhost}
+      - TELEMETRYFLOW_API_KEY_ID=${TELEMETRYFLOW_API_KEY_ID}
+      - TELEMETRYFLOW_API_KEY_SECRET=${TELEMETRYFLOW_API_KEY_SECRET}
+      - TELEMETRYFLOW_ENDPOINT=${TELEMETRYFLOW_ENDPOINT:-tfo-collector:4317}
+      - TELEMETRYFLOW_SERVICE_NAME=${TELEMETRYFLOW_SERVICE_NAME:-telemetryflow-python-mcp}
+      - TELEMETRYFLOW_SERVICE_VERSION=${TELEMETRYFLOW_SERVICE_VERSION:-1.2.0}
+      - TELEMETRYFLOW_ENVIRONMENT=${TELEMETRYFLOW_ENVIRONMENT:-development}
+      - TELEMETRYFLOW_INSECURE=${TELEMETRYFLOW_INSECURE:-true}
+      - TELEMETRYFLOW_MCP_SERVER_HOST=${TELEMETRYFLOW_MCP_SERVER_HOST:-0.0.0.0}
       - TELEMETRYFLOW_MCP_SERVER_PORT=${TELEMETRYFLOW_MCP_SERVER_PORT:-8080}
       - TELEMETRYFLOW_MCP_SERVER_TRANSPORT=${TELEMETRYFLOW_MCP_SERVER_TRANSPORT:-stdio}
       - TELEMETRYFLOW_MCP_DEBUG=${TELEMETRYFLOW_MCP_DEBUG:-false}
-      # Logging
       - TELEMETRYFLOW_MCP_LOG_LEVEL=${TELEMETRYFLOW_MCP_LOG_LEVEL:-info}
       - TELEMETRYFLOW_MCP_LOG_FORMAT=${TELEMETRYFLOW_MCP_LOG_FORMAT:-json}
-      # Redis/Cache
+      - TELEMETRYFLOW_MCP_POSTGRES_URL=postgres://tfo_admin:${POSTGRES_PASSWORD:-tfo_admin}@postgres:5432/telemetryflow_db
+      - TELEMETRYFLOW_MCP_CLICKHOUSE_URL=clickhouse://tfo_admin:${CLICKHOUSE_PASSWORD:-tfo_admin}@clickhouse:9000/telemetryflow_db
       - TELEMETRYFLOW_MCP_REDIS_URL=redis://redis:6379
-      - TELEMETRYFLOW_MCP_CACHE_ENABLED=${TELEMETRYFLOW_MCP_CACHE_ENABLED:-true}
-      - TELEMETRYFLOW_MCP_CACHE_TTL=${TELEMETRYFLOW_MCP_CACHE_TTL:-300}
-      # Queue
-      - TELEMETRYFLOW_MCP_QUEUE_ENABLED=${TELEMETRYFLOW_MCP_QUEUE_ENABLED:-true}
-      - TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY=${TELEMETRYFLOW_MCP_QUEUE_CONCURRENCY:-5}
-      # Database
-      - TELEMETRYFLOW_MCP_POSTGRES_URL=postgres://telemetryflow:${POSTGRES_PASSWORD:-telemetryflow}@postgres:5432/tfo_mcp?sslmode=disable
-      - TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS=${TELEMETRYFLOW_MCP_POSTGRES_MAX_CONNS:-25}
-      - TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS=${TELEMETRYFLOW_MCP_POSTGRES_MIN_CONNS:-5}
-      # Analytics
-      - TELEMETRYFLOW_MCP_CLICKHOUSE_URL=clickhouse://clickhouse:9000/tfo_mcp_analytics
-      # Telemetry
-      - TELEMETRYFLOW_MCP_TELEMETRY_ENABLED=${TELEMETRYFLOW_MCP_TELEMETRY_ENABLED:-true}
-      - TELEMETRYFLOW_MCP_TELEMETRY_BACKEND=${TELEMETRYFLOW_MCP_TELEMETRY_BACKEND:-telemetryflow}
-      - TELEMETRYFLOW_MCP_OTLP_ENDPOINT=${TELEMETRYFLOW_MCP_OTLP_ENDPOINT:-localhost:4317}
-      - TELEMETRYFLOW_MCP_SERVICE_NAME=${TELEMETRYFLOW_MCP_SERVICE_NAME:-telemetryflow-python-mcp}
-      # TelemetryFlow SDK
-      - TELEMETRYFLOW_API_KEY=${TELEMETRYFLOW_API_KEY:-}
-      - TELEMETRYFLOW_ENDPOINT=${TELEMETRYFLOW_ENDPOINT:-api.telemetryflow.id:4317}
-      - TELEMETRYFLOW_SERVICE_NAME=${TELEMETRYFLOW_SERVICE_NAME:-telemetryflow-python-mcp}
-      - TELEMETRYFLOW_SERVICE_VERSION=${TELEMETRYFLOW_SERVICE_VERSION:-1.1.2}
-      - TELEMETRYFLOW_ENVIRONMENT=${TELEMETRYFLOW_ENVIRONMENT:-production}
     volumes:
       - ./configs:/app/configs:ro
     stdin_open: true
     tty: true
     networks:
-      - tfo-mcp-network
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_MCP:-172.154.152.10}
     healthcheck:
       test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
       interval: 30s
@@ -62,150 +114,55 @@ services:
       retries: 3
       start_period: 5s
 
-  # ============================================
-  # Redis Cache (Optional)
-  # ============================================
-  redis:
-    image: redis:7-alpine
-    container_name: tfo-mcp-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - tfo-mcp-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - full
+  #==============================================================================================
+  # MONITORING SERVICES (aligned with TFO-Platform)
+  #==============================================================================================
 
-  # ============================================
-  # NATS JetStream (Optional)
-  # ============================================
-  nats:
-    image: nats:2-alpine
-    container_name: tfo-mcp-nats
+  #----------------------------------------------------------------------------------------------
+  # TFO-COLLECTOR - TelemetryFlow Collector (OCB Native v1.2.1)
+  #----------------------------------------------------------------------------------------------
+  tfo-collector:
+    profiles: ["dev", "full", "example"]
+    platform: linux/amd64
+    image: telemetryflow/telemetryflow-collector:${TFO_COLLECTOR_VERSION:-1.2.1}
+    command: ["--config=/etc/tfo-collector/tfo-collector.yaml"]
+    container_name: ${CONTAINER_OTEL:-telemetryflow_mcp_tfo_collector}
     restart: unless-stopped
-    command: ["--jetstream", "--store_dir=/data"]
-    ports:
-      - "${NATS_PORT:-4222}:4222"
-      - "${NATS_MONITOR_PORT:-8222}:8222"
-    volumes:
-      - nats-data:/data
-    networks:
-      - tfo-mcp-network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8222/healthz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - full
-
-  # ============================================
-  # PostgreSQL (Optional)
-  # ============================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: tfo-mcp-postgres
-    restart: unless-stopped
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-telemetryflow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-telemetryflow}
-      POSTGRES_DB: ${POSTGRES_DB:-tfo_mcp}
+      - TELEMETRYFLOW_ENDPOINT=${TELEMETRYFLOW_BACKEND_ENDPOINT:-http://host.docker.internal:3000}
+      - TELEMETRYFLOW_API_KEY_ID=${TELEMETRYFLOW_API_KEY_ID}
+      - TELEMETRYFLOW_API_KEY_SECRET=${TELEMETRYFLOW_API_KEY_SECRET}
+      - TELEMETRYFLOW_COLLECTOR_ID=${CONTAINER_OTEL:-telemetryflow_mcp_tfo_collector}
+      - TELEMETRYFLOW_ENVIRONMENT=${TELEMETRYFLOW_ENVIRONMENT:-development}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./migrations/postgres:/docker-entrypoint-initdb.d:ro
-    networks:
-      - tfo-mcp-network
+      - ./configs/tfo-collector.yaml:/etc/tfo-collector/tfo-collector.yaml:ro
+    ports:
+      - "${PORT_OTEL_GRPC:-4317}:4317"
+      - "${PORT_OTEL_HTTP:-4318}:4318"
+      - "${PORT_OTEL_METRICS:-8889}:8889"
+      - "${PORT_OTEL_HEALTH:-13133}:13133"
+      - "${PORT_OTEL_ZPAGES:-55679}:55679"
+      - "${PORT_OTEL_PPROF:-1777}:1777"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-telemetryflow} -d ${POSTGRES_DB:-tfo_mcp}"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133"]
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles:
-      - full
-
-  # ============================================
-  # ClickHouse Analytics (Optional)
-  # ============================================
-  clickhouse:
-    image: clickhouse/clickhouse-server:24-alpine
-    container_name: tfo-mcp-clickhouse
-    restart: unless-stopped
-    ports:
-      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
-      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
-    environment:
-      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-telemetryflow}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-telemetryflow}
-      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-tfo_mcp_analytics}
-    volumes:
-      - clickhouse-data:/var/lib/clickhouse
-      - ./migrations/clickhouse:/docker-entrypoint-initdb.d:ro
+      start_period: 10s
     networks:
-      - tfo-mcp-network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8123/ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - full
-      - analytics
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_OTEL:-172.154.152.30}
 
-  # ============================================
-  # OpenTelemetry Collector (Optional)
-  # ============================================
-  otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: tfo-mcp-otel-collector
-    restart: unless-stopped
-    command: ["--config=/etc/otel-collector-config.yaml"]
-    ports:
-      - "${OTEL_GRPC_PORT:-4317}:4317"
-      - "${OTEL_HTTP_PORT:-4318}:4318"
-      - "8888:8888"
-    volumes:
-      - ./configs/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
-    networks:
-      - tfo-mcp-network
-    profiles:
-      - observability
-
-  # ============================================
-  # Jaeger (Optional - for tracing)
-  # ============================================
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: tfo-mcp-jaeger
-    restart: unless-stopped
-    ports:
-      - "${JAEGER_UI_PORT:-16686}:16686"
-      - "14268:14268"
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    networks:
-      - tfo-mcp-network
-    profiles:
-      - observability
-
-  # ============================================
-  # Prometheus (Optional - for metrics)
-  # ============================================
+  #----------------------------------------------------------------------------------------------
+  # PROMETHEUS (for metrics visualization)
+  #----------------------------------------------------------------------------------------------
   prometheus:
-    image: prom/prometheus:latest
-    container_name: tfo-mcp-prometheus
-    restart: unless-stopped
+    container_name: ${CONTAINER_PROMETHEUS:-telemetryflow_mcp_prometheus}
+    image: prom/prometheus:${PROMETHEUS_VERSION:-v3.4.0}
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "${PORT_PROMETHEUS:-9090}:9090"
     volumes:
       - ./configs/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -214,38 +171,262 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
     networks:
-      - tfo-mcp-network
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_PROMETHEUS:-172.154.152.70}
     profiles:
       - observability
 
-  # ============================================
-  # Grafana (Optional - for dashboards)
-  # ============================================
-  grafana:
-    image: grafana/grafana:latest
-    container_name: tfo-mcp-grafana
+  #==============================================================================================
+  # PLATFORM SERVICES (aligned with TFO-Platform monolith)
+  #==============================================================================================
+
+  #----------------------------------------------------------------------------------------------
+  # POSTGRESQL - Relational Data Storage (Config, Entities, IAM)
+  #----------------------------------------------------------------------------------------------
+  postgres:
+    profiles: ["platform"]
+    platform: linux/amd64
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
+    container_name: ${CONTAINER_POSTGRES:-telemetryflow_mcp_postgres}
     restart: unless-stopped
     ports:
-      - "${GRAFANA_PORT:-3000}:3000"
+      - "${PORT_POSTGRES:-5432}:5432"
     environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      - TZ=${TZ:-UTC}
+      - POSTGRES_USER=${POSTGRES_USERNAME:-tfo_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      - POSTGRES_DB=${POSTGRES_DB:-telemetryflow_db}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ${DATA_POSTGRESQL:-${VOLUMES_BASE_PATH:-/opt/data/docker/telemetryflow-mcp}/postgresql}:/var/lib/postgresql/data
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_POSTGRES:-172.154.153.20}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-tfo_admin} -d ${POSTGRES_DB:-telemetryflow_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  #----------------------------------------------------------------------------------------------
+  # CLICKHOUSE - Time-Series & Analytics Storage (Metrics, Logs, Traces, Audit)
+  #----------------------------------------------------------------------------------------------
+  clickhouse:
+    profiles: ["platform", "analytics"]
+    platform: linux/amd64
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_VERSION:-latest}
+    container_name: ${CONTAINER_CLICKHOUSE:-telemetryflow_mcp_clickhouse}
+    restart: unless-stopped
+    ports:
+      - "${PORT_CLICKHOUSE_HTTP:-8123}:8123"
+      - "${PORT_CLICKHOUSE_NATIVE:-9000}:9000"
+    environment:
+      - TZ=${TZ:-UTC}
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB:-telemetryflow_db}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-tfo_admin}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD must be set}
+    volumes:
+      - ${DATA_CLICKHOUSE:-${VOLUMES_BASE_PATH:-/opt/data/docker/telemetryflow-mcp}/clickhouse}/data:/var/lib/clickhouse
+      - ${DATA_CLICKHOUSE:-${VOLUMES_BASE_PATH:-/opt/data/docker/telemetryflow-mcp}/clickhouse}/logs:/var/log/clickhouse-server
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_CLICKHOUSE:-172.154.153.40}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  #----------------------------------------------------------------------------------------------
+  # REDIS - Cache (L2), Session Store, BullMQ Job Queues
+  #----------------------------------------------------------------------------------------------
+  redis:
+    profiles: ["platform"]
+    platform: linux/amd64
+    image: redis:${REDIS_VERSION:-7-alpine}
+    container_name: ${CONTAINER_REDIS:-telemetryflow_mcp_redis}
+    restart: unless-stopped
+    ports:
+      - "${PORT_REDIS:-6379}:6379"
+    command: >
+      redis-server
+      --maxmemory ${REDIS_MAX_MEMORY:-512mb}
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - ${DATA_REDIS:-${VOLUMES_BASE_PATH:-/opt/data/docker/telemetryflow-mcp}/redis}:/data
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_REDIS:-172.154.153.50}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  #----------------------------------------------------------------------------------------------
+  # NATS - Cross-Module Domain Event Messaging
+  #----------------------------------------------------------------------------------------------
+  nats:
+    profiles: ["platform"]
+    platform: linux/amd64
+    image: nats:${NATS_VERSION:-2-alpine}
+    container_name: ${CONTAINER_NATS:-telemetryflow_mcp_nats}
+    restart: unless-stopped
+    ports:
+      - "${PORT_NATS_CLIENT:-4222}:4222"
+      - "${PORT_NATS_MONITOR:-8222}:8222"
+    command: ["--js", "--sd", "/data", "-m", "8222"]
+    volumes:
+      - ${DATA_NATS:-${VOLUMES_BASE_PATH:-/opt/data/docker/telemetryflow-mcp}/nats}:/data
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_NATS:-172.154.153.55}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  #----------------------------------------------------------------------------------------------
+  # TFO-BACKEND - NestJS API
+  #----------------------------------------------------------------------------------------------
+  tfo-backend:
+    profiles: ["platform"]
+    platform: linux/amd64
+    image: telemetryflow/telemetryflow-platform:${TFO_PLATFORM_VERSION:-1.4.0}
+    container_name: ${CONTAINER_BACKEND:-telemetryflow_mcp_backend}
+    restart: unless-stopped
+    ports:
+      - "${PORT_BACKEND:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - TZ=${TZ:-UTC}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-telemetryflow_db}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME:-tfo_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB:-telemetryflow_db}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-tfo_admin}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD:?CLICKHOUSE_PASSWORD must be set}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_MAX_MEMORY=${REDIS_MAX_MEMORY:-512mb}
+      - REDIS_DB_SESSION=0
+      - REDIS_DB_CACHE=1
+      - REDIS_DB_BULLMQ=2
+      - NATS_URL=nats://nats:4222
+      - ENABLE_BULLMQ=${ENABLE_BULLMQ:-true}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET must be set}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
+      - LOGGER_TYPE=${LOGGER_TYPE:-winston}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_PRETTY_PRINT=${LOG_PRETTY_PRINT:-false}
+      - OTEL_ENABLED=false
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-telemetryflow-platform}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_BACKEND:-172.154.153.10}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  #----------------------------------------------------------------------------------------------
+  # TFO-VIZ - Vue 3 SPA Frontend (Nginx)
+  #----------------------------------------------------------------------------------------------
+  tfo-viz:
+    profiles: ["platform"]
+    platform: linux/amd64
+    image: telemetryflow/telemetryflow-viz:${TFO_PLATFORM_VERSION:-1.4.0}
+    container_name: ${CONTAINER_FRONTEND:-telemetryflow_mcp_frontend}
+    restart: unless-stopped
+    ports:
+      - "${PORT_FRONTEND:-8080}:80"
+    depends_on:
+      tfo-backend:
+        condition: service_healthy
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_FRONTEND:-172.154.153.15}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  #==============================================================================================
+  # OBSERVABILITY SERVICES
+  #==============================================================================================
+
+  #----------------------------------------------------------------------------------------------
+  # JAEGER - Distributed Tracing
+  #----------------------------------------------------------------------------------------------
+  jaeger:
+    container_name: ${CONTAINER_JAEGER:-telemetryflow_mcp_jaeger}
+    image: jaegertracing/all-in-one:${JAEGER_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "${PORT_JAEGER_UI:-16686}:16686"
+      - "${PORT_JAEGER_COLLECTOR:-14268}:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_JAEGER:-172.154.152.80}
+    profiles:
+      - observability
+
+  #----------------------------------------------------------------------------------------------
+  # GRAFANA - Dashboards & Visualization
+  #----------------------------------------------------------------------------------------------
+  grafana:
+    container_name: ${CONTAINER_GRAFANA:-telemetryflow_mcp_grafana}
+    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "${PORT_GRAFANA:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
-      - tfo-mcp-network
+      telemetryflow_python_mcp_net:
+        ipv4_address: ${CONTAINER_IP_GRAFANA:-172.154.152.90}
     profiles:
       - observability
 
-networks:
-  tfo-mcp-network:
-    driver: bridge
-
+#================================================================================================
+# VOLUMES
+#================================================================================================
 volumes:
-  redis-data:
-  nats-data:
-  postgres-data:
-  clickhouse-data:
   prometheus-data:
+    driver: local
   grafana-data:
+    driver: local

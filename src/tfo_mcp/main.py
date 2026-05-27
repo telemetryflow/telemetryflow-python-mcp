@@ -40,23 +40,21 @@ async def run_server(
     from tfo_mcp.presentation.resources import register_builtin_resources
     from tfo_mcp.presentation.server import MCPServer
     from tfo_mcp.presentation.tools import register_builtin_tools
+    from tfo_mcp.presentation.tools.tfo_clickhouse_tools import register_clickhouse_tools
+    from tfo_mcp.presentation.tools.tfo_postgres_tools import register_postgres_tools
 
-    # Load configuration
     config = load_config(config_path)
 
-    # Override debug mode if specified
     if debug:
         config.server.debug = True
         config.logging.level = "debug"
 
-    # Setup logging
     setup_logging(config.logging)
 
     import structlog
 
     logger = structlog.get_logger(__name__)
 
-    # Initialize telemetry
     telemetry_client = initialize_telemetry(config.telemetry)
     if telemetry_client and telemetry_client.is_enabled:
         logger.info(
@@ -74,7 +72,6 @@ async def run_server(
         telemetry=config.telemetry.enabled,
     )
 
-    # Create Claude client if API key is available
     claude_client = None
     if config.claude.api_key:
         claude_client = ClaudeClient(config.claude)
@@ -82,55 +79,51 @@ async def run_server(
     else:
         logger.warning("Claude API key not configured, claude_conversation tool disabled")
 
-    # Create and configure server
     server = MCPServer(config)
 
-    # Setup signal handlers
     setup_signal_handlers(server)
 
-    # Register built-in components when session is initialized
-    original_handle_initialize = server._handle_initialize
+    register_builtin_tools(server, claude_client)
+    register_builtin_resources(server, config)
+    register_builtin_prompts(server)
 
-    async def handle_initialize_with_builtins(params: dict[str, Any]) -> dict[str, Any]:
-        result = await original_handle_initialize(params)
-        if server.session:
-            register_builtin_tools(server.session, claude_client)
-            register_builtin_resources(server.session, config)
-            register_builtin_prompts(server.session)
-            logger.info(
-                "Built-in components registered",
-                tools=len(server.session.tools),
-                resources=len(server.session.resources),
-                prompts=len(server.session.prompts),
-            )
+    try:
+        register_postgres_tools(server)
+        logger.info("TFO PostgreSQL datasource tools registered")
+    except Exception:
+        logger.debug("TFO PostgreSQL datasource tools skipped (asyncpg not available)")
 
-            # Record session initialization in telemetry
-            telemetry = get_telemetry_client()
-            if telemetry:
-                telemetry.record_session_event(
-                    "initialized",
-                    session_id=str(server.session.id),
-                    attributes={
-                        "tools_count": len(server.session.tools),
-                        "resources_count": len(server.session.resources),
-                        "prompts_count": len(server.session.prompts),
-                        "client_name": params.get("clientInfo", {}).get("name", "unknown"),
-                    },
-                )
-                telemetry.increment_counter("server.sessions.active")
+    try:
+        register_clickhouse_tools(server)
+        logger.info("TFO ClickHouse analytics tools registered")
+    except Exception:
+        logger.debug("TFO ClickHouse analytics tools skipped (clickhouse-connect not available)")
 
-        return result
+    logger.info(
+        "Built-in components registered",
+        tools=len(server._tool_definitions),
+        resources=len(server._resource_definitions) + len(server._template_definitions),
+        prompts=len(server._prompt_definitions),
+    )
 
-    server._handle_initialize = handle_initialize_with_builtins  # type: ignore[method-assign]
+    if telemetry_client:
+        telemetry_client.record_session_event(
+            "initialized",
+            attributes={
+                "tools_count": len(server._tool_definitions),
+                "resources_count": len(server._resource_definitions)
+                + len(server._template_definitions),
+                "prompts_count": len(server._prompt_definitions),
+            },
+        )
+        telemetry_client.increment_counter("server.sessions.active")
 
-    # Run server
     try:
         await server.run()
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt")
     except Exception as e:
         logger.exception("Server error", error=str(e))
-        # Record error in telemetry
         telemetry = get_telemetry_client()
         if telemetry:
             telemetry.log_error(
@@ -142,19 +135,13 @@ async def run_server(
             )
         raise
     finally:
-        # Record session closure in telemetry
         telemetry = get_telemetry_client()
         if telemetry:
-            if server.session:
-                telemetry.record_session_event(
-                    "closed",
-                    session_id=str(server.session.id),
-                )
+            telemetry.record_session_event("closed")
             telemetry.increment_counter("server.shutdowns")
 
         server.stop()
 
-        # Shutdown telemetry (flush remaining data)
         shutdown_telemetry(timeout=10.0)
 
         logger.info("Server stopped")
@@ -241,7 +228,7 @@ def init_config() -> None:
 
 server:
   name: "TelemetryFlow-MCP"
-  version: "1.1.2"
+  version: "1.2.0"
   transport: "stdio"
   debug: false
 
@@ -272,7 +259,7 @@ telemetry:
   # Enable to send telemetry to TelemetryFlow platform
   enabled: false
   service_name: "telemetryflow-python-mcp"
-  service_version: "1.1.2"
+  service_version: "1.2.0"
   service_namespace: "telemetryflow"
   environment: "production"
 

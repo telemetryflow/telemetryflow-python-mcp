@@ -68,7 +68,7 @@ class Conversation:
     @classmethod
     def create(
         cls,
-        model: Model | str = Model.CLAUDE_4_SONNET,
+        model: Model | str = Model.CLAUDE_SONNET_4,
         system_prompt: str = "",
         settings: ConversationSettings | None = None,
     ) -> Conversation:

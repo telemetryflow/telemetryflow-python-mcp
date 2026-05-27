@@ -4,15 +4,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from tfo_mcp.domain.entities import Prompt, PromptArgument, PromptMessage
+import mcp.types as types
+
+from tfo_mcp.domain.entities import PromptMessage
 from tfo_mcp.domain.valueobjects import Role
 
 if TYPE_CHECKING:
-    from tfo_mcp.domain.aggregates import Session
+    from tfo_mcp.presentation.server import MCPServer
 
 
 async def _code_review_generator(args: dict[str, str]) -> list[PromptMessage]:
-    """Generate code review prompt messages."""
     code = args.get("code", "")
     language = args.get("language", "")
 
@@ -37,7 +38,6 @@ Please provide a thorough code review with specific recommendations.""",
 
 
 async def _explain_code_generator(args: dict[str, str]) -> list[PromptMessage]:
-    """Generate code explanation prompt messages."""
     code = args.get("code", "")
     language = args.get("language", "")
     detail_level = args.get("detail_level", "medium")
@@ -70,7 +70,6 @@ Include:
 
 
 async def _debug_help_generator(args: dict[str, str]) -> list[PromptMessage]:
-    """Generate debugging help prompt messages."""
     code = args.get("code", "")
     error = args.get("error", "")
     language = args.get("language", "")
@@ -97,19 +96,18 @@ Please help me:
     return [message]
 
 
-def register_builtin_prompts(session: Session) -> None:
-    """Register all built-in prompts with the session."""
-    # Code review prompt
-    code_review = Prompt.create(
+def register_builtin_prompts(server: MCPServer) -> None:
+    """Register all built-in prompts with the MCP server."""
+    server.register_prompt(
         name="code_review",
         description="Get a thorough code review with actionable feedback",
         arguments=[
-            PromptArgument(
+            types.PromptArgument(
                 name="code",
                 description="The code to review",
                 required=True,
             ),
-            PromptArgument(
+            types.PromptArgument(
                 name="language",
                 description="Programming language of the code",
                 required=False,
@@ -117,24 +115,22 @@ def register_builtin_prompts(session: Session) -> None:
         ],
         generator=_code_review_generator,
     )
-    session.register_prompt(code_review)
 
-    # Explain code prompt
-    explain_code = Prompt.create(
+    server.register_prompt(
         name="explain_code",
         description="Get a detailed explanation of what code does",
         arguments=[
-            PromptArgument(
+            types.PromptArgument(
                 name="code",
                 description="The code to explain",
                 required=True,
             ),
-            PromptArgument(
+            types.PromptArgument(
                 name="language",
                 description="Programming language of the code",
                 required=False,
             ),
-            PromptArgument(
+            types.PromptArgument(
                 name="detail_level",
                 description="Level of detail: brief, medium, or detailed",
                 required=False,
@@ -142,24 +138,22 @@ def register_builtin_prompts(session: Session) -> None:
         ],
         generator=_explain_code_generator,
     )
-    session.register_prompt(explain_code)
 
-    # Debug help prompt
-    debug_help = Prompt.create(
+    server.register_prompt(
         name="debug_help",
         description="Get help debugging code errors",
         arguments=[
-            PromptArgument(
+            types.PromptArgument(
                 name="code",
                 description="The code with the bug",
                 required=True,
             ),
-            PromptArgument(
+            types.PromptArgument(
                 name="error",
                 description="The error message or description of the issue",
                 required=True,
             ),
-            PromptArgument(
+            types.PromptArgument(
                 name="language",
                 description="Programming language of the code",
                 required=False,
@@ -167,4 +161,3 @@ def register_builtin_prompts(session: Session) -> None:
         ],
         generator=_debug_help_generator,
     )
-    session.register_prompt(debug_help)

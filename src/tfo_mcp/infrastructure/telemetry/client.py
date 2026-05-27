@@ -76,14 +76,11 @@ class MCPTelemetryClient:
 
         builder = TelemetryFlowBuilder()
 
-        # Set API credentials
         if self._config.api_key_id and self._config.api_key_secret:
             builder.with_api_key(self._config.api_key_id, self._config.api_key_secret)
         else:
-            # Try auto-configuration from environment
             builder.with_auto_configuration()
 
-        # Set endpoint and protocol
         builder.with_endpoint(self._config.endpoint)
         if self._config.protocol.lower() == "http":
             builder.with_http()
@@ -92,7 +89,6 @@ class MCPTelemetryClient:
 
         builder.with_insecure(self._config.insecure)
 
-        # Set service information
         builder.with_service(
             self._config.service_name,
             self._config.service_version,
@@ -100,11 +96,9 @@ class MCPTelemetryClient:
         builder.with_service_namespace(self._config.service_namespace)
         builder.with_environment(self._config.environment)
 
-        # Set connection settings
         builder.with_timeout(timedelta(seconds=self._config.timeout))
         builder.with_compression(self._config.compression)
 
-        # Set signal configuration
         builder.with_signals(
             metrics=self._config.enable_metrics,
             logs=self._config.enable_logs,
@@ -112,27 +106,22 @@ class MCPTelemetryClient:
         )
         builder.with_exemplars(self._config.enable_exemplars)
 
-        # Set batch settings
         builder.with_batch_settings(
             timeout=timedelta(milliseconds=self._config.batch_timeout_ms),
             max_size=self._config.batch_max_size,
         )
 
-        # Set retry settings
         builder.with_retry(
             enabled=self._config.retry_enabled,
             max_retries=self._config.max_retries,
             backoff=timedelta(milliseconds=self._config.retry_backoff_ms),
         )
 
-        # Set rate limit
         builder.with_rate_limit(self._config.rate_limit)
 
-        # Add custom attributes for MCP context
         builder.with_custom_attribute("mcp.server", "telemetryflow-python-mcp")
         builder.with_custom_attribute("mcp.protocol", "2024-11-05")
 
-        # Build client
         self._client = builder.build()
 
     def initialize(self) -> None:

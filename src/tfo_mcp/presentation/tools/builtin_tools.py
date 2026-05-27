@@ -11,23 +11,21 @@ from typing import TYPE_CHECKING, Any
 
 import aiofiles
 
-from tfo_mcp.domain.entities import Tool, ToolInputSchema, ToolResult
+from tfo_mcp.domain.entities import ToolResult
 
 ToolHandlerFunc = Callable[[dict[str, Any]], Awaitable[ToolResult]]
 
 if TYPE_CHECKING:
-    from tfo_mcp.domain.aggregates import Session
     from tfo_mcp.infrastructure.claude import ClaudeClient
+    from tfo_mcp.presentation.server import MCPServer
 
 
 async def _echo_handler(input_data: dict[str, Any]) -> ToolResult:
-    """Echo tool handler - for testing."""
     message = input_data.get("message", "")
     return ToolResult.text(f"Echo: {message}")
 
 
 async def _read_file_handler(input_data: dict[str, Any]) -> ToolResult:
-    """Read file tool handler."""
     path = input_data.get("path")
     encoding = input_data.get("encoding", "utf-8")
 
@@ -54,7 +52,6 @@ async def _read_file_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _write_file_handler(input_data: dict[str, Any]) -> ToolResult:
-    """Write file tool handler."""
     path = input_data.get("path")
     content = input_data.get("content", "")
     create_dirs = input_data.get("create_dirs", False)
@@ -81,7 +78,6 @@ async def _write_file_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _list_directory_handler(input_data: dict[str, Any]) -> ToolResult:
-    """List directory tool handler."""
     path = input_data.get("path", ".")
     recursive = input_data.get("recursive", False)
 
@@ -111,7 +107,6 @@ async def _list_directory_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _search_files_handler(input_data: dict[str, Any]) -> ToolResult:
-    """Search files tool handler."""
     path = input_data.get("path", ".")
     pattern = input_data.get("pattern", "*")
 
@@ -130,7 +125,6 @@ async def _search_files_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _execute_command_handler(input_data: dict[str, Any]) -> ToolResult:
-    """Execute command tool handler."""
     command = input_data.get("command")
     working_dir = input_data.get("working_dir")
     timeout = input_data.get("timeout", 30)
@@ -172,7 +166,6 @@ async def _execute_command_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _system_info_handler(_input_data: dict[str, Any]) -> ToolResult:
-    """System info tool handler."""
     try:
         info = {
             "platform": platform.system(),
@@ -191,10 +184,7 @@ async def _system_info_handler(_input_data: dict[str, Any]) -> ToolResult:
 
 
 def _create_claude_conversation_handler(claude_client: ClaudeClient) -> ToolHandlerFunc:
-    """Create a Claude conversation handler with the given client."""
-
     async def handler(input_data: dict[str, Any]) -> ToolResult:
-        """Claude conversation tool handler."""
         from tfo_mcp.domain.entities import Message
         from tfo_mcp.domain.valueobjects import Model, SystemPrompt
 
@@ -226,7 +216,6 @@ def _create_claude_conversation_handler(claude_client: ClaudeClient) -> ToolHand
     return handler
 
 
-# Built-in tool definitions
 BUILTIN_TOOLS: list[dict[str, Any]] = [
     {
         "name": "echo",
@@ -380,55 +369,45 @@ BUILTIN_TOOLS: list[dict[str, Any]] = [
 
 
 def register_builtin_tools(
-    session: Session,
+    server: MCPServer,
     claude_client: ClaudeClient | None = None,
 ) -> None:
-    """Register all built-in tools with the session."""
+    """Register all built-in tools with the MCP server."""
     for tool_def in BUILTIN_TOOLS:
-        tool = Tool.create(
+        server.register_tool(
             name=tool_def["name"],
             description=tool_def["description"],
-            input_schema=ToolInputSchema.from_dict(tool_def["input_schema"]),
+            input_schema=tool_def["input_schema"],
             handler=tool_def["handler"],
-            category=tool_def.get("category", "general"),
-            tags=tool_def.get("tags", []),
         )
-        session.register_tool(tool)
 
-    # Register Claude conversation tool if client is available
     if claude_client:
-        claude_tool = Tool.create(
+        server.register_tool(
             name="claude_conversation",
             description="Have a conversation with Claude AI",
-            input_schema=ToolInputSchema.from_dict(
-                {
-                    "type": "object",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "The message to send to Claude",
-                        },
-                        "system_prompt": {
-                            "type": "string",
-                            "description": "Optional system prompt",
-                        },
-                        "model": {
-                            "type": "string",
-                            "description": "Claude model to use",
-                            "default": "claude-sonnet-4-20250514",
-                        },
-                        "max_tokens": {
-                            "type": "integer",
-                            "description": "Maximum tokens in response",
-                            "default": 4096,
-                        },
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The message to send to Claude",
                     },
-                    "required": ["message"],
-                }
-            ),
+                    "system_prompt": {
+                        "type": "string",
+                        "description": "Optional system prompt",
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "Claude model to use",
+                        "default": "claude-sonnet-4-20250514",
+                    },
+                    "max_tokens": {
+                        "type": "integer",
+                        "description": "Maximum tokens in response",
+                        "default": 4096,
+                    },
+                },
+                "required": ["message"],
+            },
             handler=_create_claude_conversation_handler(claude_client),
-            category="ai",
-            tags=["ai", "claude", "conversation"],
-            timeout_seconds=120.0,
         )
-        session.register_tool(claude_tool)

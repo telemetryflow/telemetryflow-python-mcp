@@ -100,7 +100,7 @@ graph TB
 ## Additional Resources
 
 - **Main README**: [../README.md](../README.md)
-- **GitHub Repository**: [devopscorner/telemetryflow-python-mcp](https://github.com/devopscorner/telemetryflow-python-mcp)
-- **TelemetryFlow Python SDK**: [devopscorner/telemetryflow-python-sdk](https://github.com/devopscorner/telemetryflow-python-sdk)
+- **GitHub Repository**: [devopscorner/telemetryflow-python-mcp](https://github.com/telemetryflow/telemetryflow-python-mcp)
+- **TelemetryFlow Python SDK**: [devopscorner/telemetryflow-python-sdk](https://github.com/telemetryflow/telemetryflow-python-sdk)
 - **MCP Specification**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
 - **Anthropic Claude API**: [docs.anthropic.com](https://docs.anthropic.com)

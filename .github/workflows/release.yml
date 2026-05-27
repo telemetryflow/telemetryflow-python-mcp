@@ -3,7 +3,7 @@
 # =============================================================================
 #
 # TelemetryFlow Python MCP Server - Community Enterprise Observability Platform (CEOP)
-# Copyright (c) 2024-2026 DevOpsCorner Indonesia. All rights reserved.
+# Copyright (c) 2024-2026 Telemetri Data Indonesia. All rights reserved.
 #
 # This workflow builds and releases TelemetryFlow Python MCP Server:
 # - PyPI package distribution
@@ -42,9 +42,9 @@ on:
 env:
   PYTHON_VERSION: '3.12'
   PRODUCT_NAME: TelemetryFlow Python MCP Server
-  VENDOR: DevOpsCorner Indonesia
+  VENDOR: Telemetri Data Indonesia
   MAINTAINER: support@telemetryflow.id
-  DESCRIPTION: MCP (Model Context Protocol) Server for TelemetryFlow - AI integration layer with Claude API support following Domain-Driven Design and CQRS patterns.
+  DESCRIPTION: Official MCP Python SDK + TFO Datasource Tools for TelemetryFlow - AI integration layer with Claude API support following Domain-Driven Design and CQRS patterns.
   LICENSE: Apache-2.0
   HOMEPAGE: https://telemetryflow.id
 
@@ -317,7 +317,7 @@ jobs:
           Documentation: https://docs.telemetryflow.id
           Support: support@telemetryflow.id
 
-          Copyright (c) 2024-2026 DevOpsCorner Indonesia
+          Copyright (c) 2024-2026 Telemetri Data Indonesia
           EOF
 
           # Create ZIP
@@ -404,7 +404,7 @@ jobs:
           Documentation: https://docs.telemetryflow.id
           Support: support@telemetryflow.id
 
-          Copyright (c) 2024-2026 DevOpsCorner Indonesia
+          Copyright (c) 2024-2026 Telemetri Data Indonesia
           EOF
 
           # Create tarball

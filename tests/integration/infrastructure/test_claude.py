@@ -211,20 +211,20 @@ class TestClaudeModels:
 
     def test_opus_model(self):
         """Test Opus model."""
-        assert Model.CLAUDE_4_OPUS.value == "claude-opus-4-20250514"
+        assert Model.CLAUDE_OPUS_4_7.value == "claude-opus-4-7"
 
     def test_sonnet_model(self):
         """Test Sonnet model."""
-        assert Model.CLAUDE_4_SONNET.value == "claude-sonnet-4-20250514"
+        assert Model.CLAUDE_SONNET_4.value == "claude-sonnet-4-20250514"
 
-    def test_sonnet_35_model(self):
-        """Test Sonnet 3.5 model."""
-        assert Model.CLAUDE_35_SONNET.value == "claude-3-5-sonnet-20241022"
+    def test_gemini_model(self):
+        """Test Gemini model."""
+        assert Model.GEMINI_2_5_PRO.value == "gemini-2.5-pro"
 
-    def test_haiku_model(self):
-        """Test Haiku model."""
-        assert Model.CLAUDE_35_HAIKU.value == "claude-3-5-haiku-20241022"
+    def test_openai_model(self):
+        """Test OpenAI model."""
+        assert Model.GPT_4_1.value == "gpt-4.1"
 
     def test_default_is_sonnet(self):
         """Test default model is Sonnet."""
-        assert Model.default() == Model.CLAUDE_4_SONNET
+        assert Model.default() == Model.CLAUDE_SONNET_4

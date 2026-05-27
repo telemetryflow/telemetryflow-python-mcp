@@ -1,6 +1,6 @@
 # TFO-Python-MCP Installation Guide
 
-> Complete installation guide for TelemetryFlow Python MCP Server
+> Complete installation guide for TelemetryFlow Python MCP Server v1.2.0
 
 ---
 
@@ -13,6 +13,7 @@
 - [Poetry Installation](#poetry-installation)
 - [Source Installation](#source-installation)
 - [Docker Installation](#docker-installation)
+- [Docker Compose Profiles](#docker-compose-profiles)
 - [IDE Integration](#ide-integration)
 - [Verification](#verification)
 - [Upgrading](#upgrading)
@@ -22,7 +23,7 @@
 
 ## Overview
 
-TFO-Python-MCP can be installed through multiple methods depending on your needs and environment.
+TFO-Python-MCP can be installed through multiple methods depending on your needs and environment. The default database name is `telemetryflow_db`, aligned with the TelemetryFlow Python-SDK conventions.
 
 ### Installation Decision Tree
 
@@ -158,12 +159,14 @@ pip install tfo-mcp[dev]
 
 ### Installation Options
 
-| Extra         | Dependencies      | Use Case                     |
-| ------------- | ----------------- | ---------------------------- |
-| `[full]`      | All optional      | Production with all features |
-| `[telemetry]` | TelemetryFlow SDK | Observability integration    |
-| `[claude]`    | Anthropic SDK     | Claude AI conversations      |
-| `[dev]`       | Testing, linting  | Development                  |
+| Extra          | Dependencies             | Use Case                     |
+| -------------- | ------------------------ | ---------------------------- |
+| `[full]`       | All optional             | Production with all features |
+| `[telemetry]`  | TelemetryFlow SDK v1.2.0 | Observability integration    |
+| `[claude]`     | Anthropic SDK            | Claude AI conversations      |
+| `[postgres]`   | PostgreSQL drivers       | PostgreSQL datasource tools  |
+| `[clickhouse]` | ClickHouse drivers       | ClickHouse analytics tools   |
+| `[dev]`        | Testing, linting         | Development                  |
 
 ### Virtual Environment (Recommended)
 
@@ -242,7 +245,7 @@ flowchart TB
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/devopscorner/telemetryflow-python-mcp.git
+git clone https://github.com/telemetryflow/telemetryflow-python-mcp.git
 cd telemetryflow-python-mcp
 
 # 2. Install Poetry (if not installed)
@@ -267,12 +270,25 @@ poetry install --all-extras
 # Install pre-commit hooks
 pre-commit install
 
-# Run tests to verify
+# Run tests to verify (1174 tests, 98% coverage)
 make test
 
 # Run linting
 make lint
 ```
+
+### Environment Configuration
+
+```bash
+# Copy the environment template
+cp .env.example .env
+
+# Edit .env and add your ANTHROPIC_API_KEY
+# The .env.example file contains 25 configuration sections
+# synchronized with TFO Python-SDK patterns
+```
+
+> **Note:** The `.env.example` file is synchronized with TFO Python-SDK patterns across 25 sections, covering application config, MCP server settings, database connections, observability, and all Docker Compose profiles. The default database name is `telemetryflow_db`, aligned with SDK conventions.
 
 ### Using uv (Fast Alternative)
 
@@ -305,7 +321,7 @@ flowchart TB
         IMAGE["tfo-python-mcp Image"]
         CONTAINER["Container"]
         VOLUME["Config Volume"]
-        NETWORK["Docker Network"]
+        NETWORK["Docker Network<br/>telemetryflow_python_mcp_net"]
     end
 
     IMAGE --> CONTAINER
@@ -322,7 +338,7 @@ flowchart TB
 docker pull devopscorner/tfo-python-mcp:latest
 
 # Pull specific version
-docker pull devopscorner/tfo-python-mcp:1.1.2
+docker pull devopscorner/tfo-python-mcp:1.2.0
 
 # Verify image
 docker images devopscorner/tfo-python-mcp
@@ -385,7 +401,7 @@ docker-compose down -v
 docker build -t my-tfo-mcp:latest .
 
 # Build with specific tag
-docker build -t my-tfo-mcp:1.1.2 .
+docker build -t my-tfo-mcp:1.2.0 .
 
 # Build multi-platform
 docker buildx build \
@@ -393,6 +409,121 @@ docker buildx build \
   -t my-tfo-mcp:latest \
   --push .
 ```
+
+---
+
+## Docker Compose Profiles
+
+The `docker-compose.yaml` supports multiple profiles for different deployment scenarios. All services run on the `telemetryflow_python_mcp_net` network and use `telemetryflow_mcp_*` container name prefixes.
+
+### Profile Overview
+
+```mermaid
+flowchart TB
+    subgraph Profiles["Docker Compose Profiles"]
+        DEV["dev<br/>Development"]
+        FULL["full<br/>Full Observability"]
+        PLATFORM["platform<br/>Full TFO Platform"]
+        ANALYTICS["analytics<br/>ClickHouse Analytics"]
+        OBSERVABILITY["observability<br/>Jaeger + Prometheus + Grafana"]
+    end
+
+    subgraph Base["Always Running"]
+        MCP["tfo-mcp<br/>MCP Server"]
+    end
+
+    MCP --> DEV
+    MCP --> FULL
+    MCP --> PLATFORM
+    MCP --> ANALYTICS
+    MCP --> OBSERVABILITY
+
+    style Base fill:#e8f5e9,stroke:#4caf50
+    style Profiles fill:#e3f2fd,stroke:#2196f3
+```
+
+| Profile         | Command                                        | Description                    | Services                                                |
+| --------------- | ---------------------------------------------- | ------------------------------ | ------------------------------------------------------- |
+| `dev`           | `docker-compose --profile dev up -d`           | Development with TFO-Collector | tfo-collector                                           |
+| `full`          | `docker-compose --profile full up -d`          | Full observability stack       | tfo-collector                                           |
+| `platform`      | `docker-compose --profile platform up -d`      | Full TFO Platform stack        | postgres, clickhouse, redis, nats, tfo-backend, tfo-viz |
+| `analytics`     | `docker-compose --profile analytics up -d`     | ClickHouse analytics only      | clickhouse                                              |
+| `observability` | `docker-compose --profile observability up -d` | Observability tools            | prometheus, jaeger, grafana                             |
+
+### Profile Details
+
+#### Development (`dev`)
+
+```bash
+docker-compose --profile dev up -d
+```
+
+Starts the MCP server with the TFO-Collector for local development. The collector exposes OTLP endpoints (gRPC:4317, HTTP:4318) and forwards telemetry to the TelemetryFlow backend.
+
+- **tfo-mcp** — MCP server (always running)
+- **tfo-collector** — TelemetryFlow Collector (OCB Native v1.2.1)
+
+#### Full Observability (`full`)
+
+```bash
+docker-compose --profile full up -d
+```
+
+Same as `dev` profile — starts the MCP server with TFO-Collector. Used when you want the full observability pipeline but not the platform services.
+
+- **tfo-mcp** — MCP server (always running)
+- **tfo-collector** — TelemetryFlow Collector
+
+#### Full TFO Platform (`platform`)
+
+```bash
+docker-compose --profile platform up -d
+```
+
+Starts the complete TFO Platform stack including databases, cache, messaging, and the TFO backend/frontend. The default database name is `telemetryflow_db`.
+
+- **tfo-mcp** — MCP server (always running)
+- **postgres** — PostgreSQL 16 (config, entities, IAM)
+- **clickhouse** — ClickHouse (metrics, logs, traces, audit)
+- **redis** — Redis 7 (cache, session store)
+- **nats** — NATS JetStream (cross-module messaging)
+- **tfo-backend** — NestJS API
+- **tfo-viz** — Vue 3 SPA frontend (Nginx)
+
+#### ClickHouse Analytics (`analytics`)
+
+```bash
+docker-compose --profile analytics up -d
+```
+
+Starts ClickHouse only — useful for analytics and time-series queries without the full platform.
+
+- **tfo-mcp** — MCP server (always running)
+- **clickhouse** — ClickHouse server
+
+#### Observability Tools (`observability`)
+
+```bash
+docker-compose --profile observability up -d
+```
+
+Starts observability tooling for monitoring the MCP server and surrounding infrastructure.
+
+- **tfo-mcp** — MCP server (always running)
+- **prometheus** — Metrics collection and querying
+- **jaeger** — Distributed tracing UI
+- **grafana** — Dashboards and visualization
+
+### Database Configuration
+
+All profiles that include database services use `telemetryflow_db` as the default database name, aligned with TFO Python-SDK conventions:
+
+| Service    | Container Name                 | Port | Database           |
+| ---------- | ------------------------------ | ---- | ------------------ |
+| PostgreSQL | `telemetryflow_mcp_postgres`   | 5432 | `telemetryflow_db` |
+| ClickHouse | `telemetryflow_mcp_clickhouse` | 9000 | `telemetryflow_db` |
+| Redis      | `telemetryflow_mcp_redis`      | 6379 | N/A                |
+| NATS       | `telemetryflow_mcp_nats`       | 4222 | N/A                |
 
 ---
 
@@ -409,7 +540,7 @@ flowchart TB
 
     subgraph MCP["TFO-Python-MCP"]
         SERVER["MCP Server"]
-        TOOLS["Tools"]
+        TOOLS["17 Tools"]
     end
 
     APP --> CONFIG
@@ -541,8 +672,9 @@ python -m tfo_mcp info
 
 # Expected output:
 # TFO-Python-MCP - TelemetryFlow Python MCP Server
-# Version:    1.1.2
+# Version:    1.2.0
 # Python:     3.11.x
+# MCP SDK:    mcp>=1.27.0
 # ...
 
 # 2. Validate configuration

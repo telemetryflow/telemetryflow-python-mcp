@@ -20,7 +20,7 @@ class TestServerConfig:
         """Test default server config values."""
         config = ServerConfig()
         assert config.name == "TelemetryFlow-MCP"
-        assert config.version == "1.1.2"
+        assert config.version == "1.2.0"
         assert config.host == "localhost"
         assert config.port == 8080
         assert config.transport == "stdio"

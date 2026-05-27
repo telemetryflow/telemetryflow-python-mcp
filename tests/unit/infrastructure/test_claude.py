@@ -137,14 +137,14 @@ class TestClaudeClientModels:
 
     def test_model_enum_values(self):
         """Test Model enum values."""
-        assert Model.CLAUDE_4_OPUS.value == "claude-opus-4-20250514"
-        assert Model.CLAUDE_4_SONNET.value == "claude-sonnet-4-20250514"
-        assert Model.CLAUDE_35_SONNET.value == "claude-3-5-sonnet-20241022"
-        assert Model.CLAUDE_35_HAIKU.value == "claude-3-5-haiku-20241022"
+        assert Model.CLAUDE_OPUS_4_7.value == "claude-opus-4-7"
+        assert Model.CLAUDE_SONNET_4.value == "claude-sonnet-4-20250514"
+        assert Model.GEMINI_2_5_PRO.value == "gemini-2.5-pro"
+        assert Model.GPT_4_1.value == "gpt-4.1"
 
     def test_default_model(self):
         """Test default model."""
-        assert Model.default() == Model.CLAUDE_4_SONNET
+        assert Model.default() == Model.CLAUDE_SONNET_4
 
 
 class TestClaudeClientToolUse:

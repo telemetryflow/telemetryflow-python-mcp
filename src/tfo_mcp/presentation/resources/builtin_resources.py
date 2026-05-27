@@ -9,22 +9,18 @@ from typing import TYPE_CHECKING
 
 import aiofiles
 
-from tfo_mcp.domain.entities import Resource, ResourceContent
+from tfo_mcp.domain.entities import ResourceContent
 from tfo_mcp.domain.valueobjects import MimeType
 
 if TYPE_CHECKING:
-    from tfo_mcp.domain.aggregates import Session
     from tfo_mcp.infrastructure.config import Config
+    from tfo_mcp.presentation.server import MCPServer
 
-# Type alias for resource reader functions
 ResourceReader = Callable[[str, dict[str, str]], Awaitable[ResourceContent]]
 
 
 def _create_config_reader(config: Config) -> ResourceReader:
-    """Create a config reader function."""
-
     async def reader(uri: str, _params: dict[str, str]) -> ResourceContent:
-        """Read server configuration."""
         config_data = {
             "server": {
                 "name": config.server.name,
@@ -47,20 +43,10 @@ def _create_config_reader(config: Config) -> ResourceReader:
     return reader
 
 
-def _create_health_reader(session: Session) -> ResourceReader:
-    """Create a health status reader function."""
-
+def _create_health_reader() -> ResourceReader:
     async def reader(uri: str, _params: dict[str, str]) -> ResourceContent:
-        """Read health status."""
         health_data = {
-            "status": "healthy" if session.is_ready else "not_ready",
-            "session": {
-                "id": str(session.id),
-                "state": session.state.value,
-                "toolCount": len(session.tools),
-                "resourceCount": len(session.resources),
-                "promptCount": len(session.prompts),
-            },
+            "status": "healthy",
         }
         return ResourceContent(
             uri=uri,
@@ -72,8 +58,6 @@ def _create_health_reader(session: Session) -> ResourceReader:
 
 
 async def _file_reader(uri: str, params: dict[str, str]) -> ResourceContent:
-    """Read a file resource."""
-    # Extract path from URI (file:///{path})
     path = uri[8:] if uri.startswith("file:///") else params.get("path", "")
 
     if not path:
@@ -91,7 +75,6 @@ async def _file_reader(uri: str, params: dict[str, str]) -> ResourceContent:
             text=f"Error: File not found: {path}",
         )
 
-    # Determine MIME type from extension
     mime_type = MimeType.from_extension(file_path.suffix)
 
     try:
@@ -103,7 +86,6 @@ async def _file_reader(uri: str, params: dict[str, str]) -> ResourceContent:
             text=content,
         )
     except UnicodeDecodeError:
-        # Binary file - read as bytes
         async with aiofiles.open(file_path, "rb") as f:
             binary_content = await f.read()
         return ResourceContent(
@@ -120,36 +102,30 @@ async def _file_reader(uri: str, params: dict[str, str]) -> ResourceContent:
 
 
 def register_builtin_resources(
-    session: Session,
+    server: MCPServer,
     config: Config,
 ) -> None:
-    """Register all built-in resources with the session."""
-    # Server configuration resource
-    config_resource = Resource.create(
+    """Register all built-in resources with the MCP server."""
+    server.register_resource(
         uri="config://server",
         name="Server Configuration",
         description="Current server configuration",
-        mime_type=MimeType.APPLICATION_JSON,
+        mime_type=MimeType.APPLICATION_JSON.value,
         reader=_create_config_reader(config),
     )
-    session.register_resource(config_resource)
 
-    # Health status resource
-    health_resource = Resource.create(
+    server.register_resource(
         uri="status://health",
         name="Health Status",
         description="Server health status",
-        mime_type=MimeType.APPLICATION_JSON,
-        reader=_create_health_reader(session),
+        mime_type=MimeType.APPLICATION_JSON.value,
+        reader=_create_health_reader(),
     )
-    session.register_resource(health_resource)
 
-    # File template resource
-    file_resource = Resource.template(
-        uri_template="file:///{path}",
+    server.register_resource(
+        uri="file:///{path}",
         name="File",
         description="Read a file from the filesystem",
-        mime_type=MimeType.TEXT_PLAIN,
+        mime_type=MimeType.TEXT_PLAIN.value,
         reader=_file_reader,
     )
-    session.register_resource(file_resource)

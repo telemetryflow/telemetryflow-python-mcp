@@ -3,7 +3,7 @@
 # =============================================================================
 #
 # TelemetryFlow Python MCP Server - Community Enterprise Observability Platform (CEOP)
-# Copyright (c) 2024-2026 DevOpsCorner Indonesia. All rights reserved.
+# Copyright (c) 2024-2026 Telemetri Data Indonesia. All rights reserved.
 #
 # This workflow builds and publishes Docker images for TelemetryFlow Python MCP:
 # - Multi-platform support: linux/amd64, linux/arm64
@@ -85,7 +85,7 @@ jobs:
       push: ${{ steps.check.outputs.push }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -171,7 +171,7 @@ jobs:
           df -h
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create Dockerfile
         run: |
@@ -181,7 +181,7 @@ jobs:
           # =============================================================================
           FROM python:3.12-slim AS builder
 
-          ARG VERSION=dev
+          ARG VERSION=2.0.0
           ARG GIT_COMMIT=unknown
           ARG BUILD_TIME=unknown
 
@@ -205,19 +205,37 @@ jobs:
           # =============================================================================
           FROM python:3.12-slim
 
-          ARG VERSION=dev
+          ARG VERSION=2.0.0
+
+          # CVE patching and minimal runtime deps
+          RUN apt-get update && \
+              apt-get upgrade -y && \
+              apt-get install -y --no-install-recommends \
+              ca-certificates \
+              curl \
+              && apt-get remove -y --purge perl \
+              && apt-get autoremove -y --purge \
+              && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
           # Install the built wheel
           COPY --from=builder /build/dist/*.whl /tmp/
           RUN pip install --no-cache-dir /tmp/*.whl && \
               rm /tmp/*.whl
 
-          # Labels
-          LABEL org.opencontainers.image.title="TelemetryFlow Python MCP Server"
-          LABEL org.opencontainers.image.description="MCP Server with DDD/CQRS architecture"
-          LABEL org.opencontainers.image.vendor="TelemetryFlow"
-          LABEL org.opencontainers.image.licenses="Apache-2.0"
-          LABEL org.opencontainers.image.version="${VERSION}"
+          # OCI Labels
+          LABEL org.opencontainers.image.title="TelemetryFlow Python MCP Server" \
+                org.opencontainers.image.description="MCP Server for TelemetryFlow with Claude AI integration and official MCP SDK" \
+                org.opencontainers.image.version="${VERSION}" \
+                org.opencontainers.image.vendor="TelemetryFlow" \
+                org.opencontainers.image.authors="Telemetri Data Indonesia <support@telemetryflow.id>" \
+                org.opencontainers.image.url="https://telemetryflow.id" \
+                org.opencontainers.image.documentation="https://docs.telemetryflow.id" \
+                org.opencontainers.image.source="https://github.com/telemetryflow/telemetryflow-python-mcp" \
+                org.opencontainers.image.licenses="Apache-2.0" \
+                org.opencontainers.image.base.name="python:3.12-slim" \
+                io.telemetryflow.product="TelemetryFlow Python MCP Server" \
+                io.telemetryflow.component="telemetryflow-python-mcp" \
+                io.telemetryflow.platform="CEOP"
 
           WORKDIR /app
 
@@ -281,7 +299,7 @@ jobs:
 
       - name: Upload SBOM
         if: needs.prepare.outputs.push == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ needs.prepare.outputs.commit }}
           path: sbom-*.spdx.json

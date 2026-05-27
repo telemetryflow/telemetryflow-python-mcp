@@ -7,13 +7,14 @@
 
   <h3>TelemetryFlow Python MCP Server (TFO-Python-MCP)</h3>
 
-[![Version](https://img.shields.io/badge/Version-1.1.2-orange.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python)](https://python.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-2024--11--05-purple?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM2LjQ4IDIgMiA2LjQ4IDIgMTJzNC40OCAxMCAxMCAxMCAxMC00LjQ4IDEwLTEwUzE3LjUyIDIgMTIgMnoiIGZpbGw9IiNmZmYiLz48L3N2Zz4=)](https://modelcontextprotocol.io/)
-[![Claude API](https://img.shields.io/badge/Claude-Opus%204%20%7C%20Sonnet%204-E1BEE7?logo=anthropic)](https://anthropic.com)
+[![LLM Providers](https://img.shields.io/badge/LLM-12_Providers_111_Models-E1BEE7?logo=anthropic)](https://anthropic.com)
 [![OTEL SDK](https://img.shields.io/badge/OpenTelemetry_SDK-1.28.0-blueviolet)](https://opentelemetry.io/)
 [![Architecture](https://img.shields.io/badge/Architecture-DDD%2FCQRS-success)](docs/ARCHITECTURE.md)
+[![Tests](https://img.shields.io/badge/Tests-1174_%7C_98%25-brightgreen)](docs/DEVELOPMENT.md)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![ClickHouse](https://img.shields.io/badge/ClickHouse-23+-FFCC00?logo=clickhouse)](https://clickhouse.com/)
 
@@ -21,16 +22,17 @@
 
 ---
 
-**Enterprise-Grade Model Context Protocol Server with Claude AI Integration**
+**Enterprise-Grade Model Context Protocol Server with Multi-Provider LLM Integration**
 
-A comprehensive MCP server implementation built using Python and following Domain-Driven Design (DDD) patterns, providing seamless integration between the Model Context Protocol and Anthropic's Claude AI.
+A comprehensive MCP server implementation built using Python and the official MCP SDK (`mcp>=1.27.0`), following Domain-Driven Design (DDD) patterns, providing seamless integration between the Model Context Protocol and 12 LLM providers with 111 models.
 
 This server works as the **AI integration layer** for the TelemetryFlow Platform, providing:
 
-- Claude AI conversation capabilities via MCP
-- Tool execution with built-in and custom tools
+- Multi-provider LLM conversation capabilities via MCP (12 providers, 111 models)
+- Tool execution with 17 built-in tools (8 builtin + 4 PostgreSQL + 5 ClickHouse)
 - Resource management and prompt templates
 - TelemetryFlow SDK observability integration
+- TFO-Platform ContextCollector and PromptBuilder integration
 
 ---
 
@@ -38,7 +40,7 @@ This server works as the **AI integration layer** for the TelemetryFlow Platform
 
 ```mermaid
 graph LR
-    subgraph "TelemetryFlow Ecosystem v1.1.2"
+    subgraph "TelemetryFlow Ecosystem v1.2.0"
         subgraph "Instrumentation"
             SDK_GO[TFO-Go-SDK<br/>OTEL SDK v1.39.0]
             SDK_PY[TFO-Python-SDK<br/>OTEL SDK v1.28.0]
@@ -48,11 +50,11 @@ graph LR
             AGENT[TFO-Agent<br/>OTEL SDK v1.39.0]
         end
         subgraph "Processing"
-            COLLECTOR[TFO-Collector<br/>OTEL v0.142.0]
+            COLLECTOR[TFO-Collector v1.2.1<br/>OTEL v0.142.0]
         end
         subgraph "AI Integration"
-            MCP_GO[TFO-Go-MCP<br/>Claude API + MCP]
-            MCP_PY[TFO-Python-MCP<br/>Claude API + MCP]
+            MCP_GO[TFO-Go-MCP<br/>LLM + MCP]
+            MCP_PY[TFO-Python-MCP<br/>LLM + MCP + Context]
         end
         subgraph "Platform"
             CORE[TFO-Core<br/>NestJS IAM v1.1.4]
@@ -86,8 +88,8 @@ graph LR
 | TFO-Collector      | v1.1.2     | v0.142.0        | Central Telemetry Processing      |
 | TFO-Go-SDK         | v1.1.2     | SDK v1.39.0     | Go Instrumentation                |
 | TFO-Python-SDK     | v1.1.2     | SDK v1.28.0     | Python Instrumentation            |
-| TFO-Go-MCP         | v1.1.2     | SDK v1.39.0     | Go MCP Server + Claude AI         |
-| **TFO-Python-MCP** | **v1.1.2** | **SDK v1.28.0** | **Python MCP Server + Claude AI** |
+| TFO-Go-MCP         | v1.1.2     | SDK v1.39.0     | Go MCP Server + LLM AI            |
+| **TFO-Python-MCP** | **v1.2.0** | **TFO SDK v1.2.0** | **Python MCP Server + LLM AI** |
 
 ---
 
@@ -95,15 +97,18 @@ graph LR
 
 | Property             | Value                                                   |
 | -------------------- | ------------------------------------------------------- |
-| **Version**          | 1.1.2                                                   |
+| **Version**          | 1.2.0                                                   |
 | **Language**         | Python 3.11+                                            |
 | **MCP Protocol**     | 2024-11-05                                              |
+| **MCP SDK**          | mcp>=1.27.0 (official)                                  |
 | **Claude SDK**       | anthropic>=0.40.0                                       |
-| **OTEL SDK**         | TelemetryFlow SDK v1.28.0                               |
+| **OTEL SDK**         | telemetryflow-sdk>=1.2.0                                |
 | **Architecture**     | DDD/CQRS                                                |
 | **Transport**        | stdio, SSE (planned), WebSocket (planned)               |
-| **Built-in Tools**   | 8 tools                                                 |
-| **Supported Models** | Claude 4 Opus, Claude 4 Sonnet, Claude 3.5 Sonnet/Haiku |
+| **Built-in Tools**   | 17 tools + ContextCollector + PromptBuilder              |
+| **Context Types**    | 78 context types across 8 categories                    |
+| **Supported Models** | 111 models across 12 LLM providers                     |
+| **Test Coverage**    | 98% coverage, 1174 tests                                |
 | **Async Runtime**    | asyncio with async/await                                |
 
 ---
@@ -121,8 +126,8 @@ graph TB
 
     subgraph "TFO-Python-MCP Server"
         subgraph "Presentation Layer"
-            SERVER[MCP Server<br/>JSON-RPC 2.0]
-            TOOLS[Built-in Tools]
+            SERVER[MCP Server<br/>Official MCP SDK mcp>=1.27.0]
+            TOOLS[Built-in Tools<br/>17 Tools]
             RESOURCES[Resources]
             PROMPTS[Prompts]
         end
@@ -131,6 +136,8 @@ graph TB
             CMD[Commands]
             QRY[Queries]
             HANDLERS[Handlers]
+            CONTEXT[ContextCollector<br/>78 Context Types]
+            PROMPT_BUILDER[PromptBuilder<br/>60+ Analyst Personas]
         end
 
         subgraph "Domain Layer - DDD"
@@ -142,16 +149,16 @@ graph TB
         end
 
         subgraph "Infrastructure Layer"
-            CLAUDE[Claude API Client]
+            LLM[LLM API Client<br/>12 Providers]
             CONFIG[Configuration<br/>Pydantic Settings]
             REPO[Repositories]
             LOG[Structured Logging<br/>structlog]
-            OTEL[TelemetryFlow SDK]
+            OTEL[TelemetryFlow SDK v1.2.0]
         end
     end
 
     subgraph "External Services"
-        ANTHROPIC[Anthropic Claude API]
+        PROVIDERS[12 LLM Providers<br/>Anthropic, Google, OpenAI, ...]
         TFO[TelemetryFlow Platform]
     end
 
@@ -166,23 +173,24 @@ graph TB
     RESOURCES --> HANDLERS
     PROMPTS --> HANDLERS
 
+    CONTEXT --> PROMPT_BUILDER
     HANDLERS --> AGG
     HANDLERS --> SVC
     AGG --> ENT
     AGG --> VO
     AGG --> EVT
 
-    SVC --> CLAUDE
+    SVC --> LLM
     HANDLERS --> REPO
     CONFIG --> SERVER
     LOG --> SERVER
     OTEL --> TFO
 
-    CLAUDE --> ANTHROPIC
+    LLM --> PROVIDERS
 
     style SERVER fill:#3776AB,stroke:#FFD43B,stroke-width:2px
-    style CLAUDE fill:#FFCDD2,stroke:#C62828
-    style ANTHROPIC fill:#FFCDD2,stroke:#C62828
+    style LLM fill:#FFCDD2,stroke:#C62828
+    style PROVIDERS fill:#FFCDD2,stroke:#C62828
     style AGG fill:#C8E6C9,stroke:#388E3C
     style HANDLERS fill:#BBDEFB,stroke:#1976D2
     style OTEL fill:#E1BEE7,stroke:#7B1FA2
@@ -218,6 +226,21 @@ graph TB
         T8[echo<br/>Testing utility]
     end
 
+    subgraph "PostgreSQL Datasource Tools"
+        T9[pg_query<br/>Execute SQL]
+        T10[pg_list_tables<br/>List tables]
+        T11[pg_describe_table<br/>Describe schema]
+        T12[pg_sessions<br/>Session history]
+    end
+
+    subgraph "ClickHouse Analytics Tools"
+        T13[ch_query<br/>Execute SQL]
+        T14[ch_tool_analytics<br/>Tool analytics]
+        T15[ch_session_analytics<br/>Session analytics]
+        T16[ch_error_analytics<br/>Error analytics]
+        T17[ch_api_usage<br/>API usage analytics]
+    end
+
     REG --> T1
     REG --> T2
     REG --> T3
@@ -226,6 +249,15 @@ graph TB
     REG --> T6
     REG --> T7
     REG --> T8
+    REG --> T9
+    REG --> T10
+    REG --> T11
+    REG --> T12
+    REG --> T13
+    REG --> T14
+    REG --> T15
+    REG --> T16
+    REG --> T17
 
     style T1 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
     style REG fill:#FFE0B2,stroke:#F57C00
@@ -243,6 +275,58 @@ graph TB
 | `execute_command`     | System   | Execute shell commands     | `command`, `working_dir`, `timeout` |
 | `system_info`         | System   | Get system information     | -                                   |
 | `echo`                | Utility  | Echo input (testing)       | `message`                           |
+
+### TFO Datasource Tools - PostgreSQL
+
+| Tool | Category | Description | Key Parameters |
+|------|----------|-------------|----------------|
+| `pg_query` | datasource | Execute SQL against TFO PostgreSQL | `query`, `params`, `max_rows`, `read_only` |
+| `pg_list_tables` | datasource | List tables in TFO PostgreSQL | `schema` |
+| `pg_describe_table` | datasource | Describe table schema | `table`, `schema` |
+| `pg_sessions` | datasource | Query MCP session history | `limit`, `state` |
+
+### TFO Datasource Tools - ClickHouse Analytics
+
+| Tool | Category | Description | Key Parameters |
+|------|----------|-------------|----------------|
+| `ch_query` | analytics | Execute SQL against TFO ClickHouse | `query`, `max_rows`, `read_only` |
+| `ch_tool_analytics` | analytics | Tool call analytics | `tool_name`, `hours`, `limit` |
+| `ch_session_analytics` | analytics | Session analytics | `hours`, `limit` |
+| `ch_error_analytics` | analytics | Error analytics | `hours`, `limit` |
+| `ch_api_usage` | analytics | LLM API usage analytics | `hours`, `model`, `limit` |
+
+---
+
+## TFO-Platform Integration
+
+### ContextCollector Service
+
+Python port of TFO-Platform `ContextCollector.service.ts` — collects live telemetry context from ClickHouse materialized views and PostgreSQL for AI analysis.
+
+**78 Context Types across 8 categories:**
+
+| Category | Context Types |
+|----------|---------------|
+| **Observability** | metrics, logs, traces, exemplars, correlations, dashboard |
+| **Infrastructure** | uptime, status-page, audit, infra-overview, infra-cpu/memory/storage/network |
+| **Kubernetes** | overview, clusters, namespaces, nodes, pods, deployments, pv, api-server, coredns |
+| **Hybrid (PG+CH)** | agents, service-map, network-map |
+| **Platform (PG)** | alerts, alert-rules, iam, iam-users/roles/permissions/matrix/assignments, tenancy, tenancy-regions/organizations/workspaces/tenants |
+| **Security** | data-masking, ai-assistant, system-setup, system-channels |
+| **Account** | profile, security, sessions, notifications, preferences, organization |
+| **AI Intelligence** | anomaly-detection, corrective-maintenance, predictive-maintenance, cost-optimization |
+| **DB Monitoring** | inventory, clickhouse, mariadb, mysql, percona, sqlite3, timescaledb, aurora, mssql, postgresql, mongodb-community/atlas, aws-rds-mysql/aurora, aws-dynamodb, cockroachdb, qan |
+
+**ClickHouse Materialized Views queried:**
+`metrics_5m` (AggMT), `logs_1h` (SumMT), `service_latency_percentiles_1h`, `service_error_rates_1h`, `exemplars_1h`, `uptime_checks`, `audit_logs_1h`, `signal_correlations_1h`, `vm_metrics_1h`, `kubernetes_metrics_1h`, `service_map_metrics_1h`, `network_map_traffic_1h`, `network_map_connection_metrics_1h`
+
+### PromptBuilder Service
+
+Python port of TFO-Platform `PromptBuilder.service.ts` — builds context-aware system prompts for LLM interactions.
+
+- **60+ specialized analyst personas** — one per context type (e.g., metrics analyst, log analyst, trace analyst, Kubernetes admin, DB administrator, etc.)
+- **5 insight types**: chronology, prediction, recommendation, root-cause, pattern
+- Context-aware prompt generation with live data injection (10K char JSON truncation)
 
 ---
 
@@ -271,7 +355,7 @@ graph TB
 ### Prerequisites
 
 - Python 3.11 or later
-- Anthropic API key
+- Anthropic API key (or other supported LLM provider API key)
 
 ### From Source
 
@@ -294,18 +378,24 @@ pip install -e ".[telemetry]"
 
 ```bash
 pip install tfo-mcp
+
+# Install with PostgreSQL datasource support
+pip install tfo-mcp[postgres]
+
+# Install with ClickHouse analytics support
+pip install tfo-mcp[clickhouse]
 ```
 
 ### Docker
 
 ```bash
 # Build image
-docker build -t telemetryflow-python-mcp:1.1.2 .
+docker build -t telemetryflow-python-mcp:1.2.0 .
 
 # Run container
 docker run --rm -it \
   -e ANTHROPIC_API_KEY="your-api-key" \
-  telemetryflow-python-mcp:1.1.2
+  telemetryflow-python-mcp:1.2.0
 ```
 
 ---
@@ -319,12 +409,12 @@ Create `tfo-mcp.yaml` or run `tfo-mcp init-config`:
 ```yaml
 # =============================================================================
 # TelemetryFlow Python MCP Server Configuration
-# Version: 1.1.2
+# Version: 1.2.0
 # =============================================================================
 
 server:
   name: "TelemetryFlow-MCP"
-  version: "1.1.2"
+  version: "1.2.0"
   transport: "stdio" # stdio, sse, websocket
   debug: false
 
@@ -422,7 +512,7 @@ Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 
 ## TelemetryFlow SDK Integration
 
-The MCP server integrates with the TelemetryFlow Python SDK to provide comprehensive observability:
+The MCP server integrates with the TelemetryFlow Python SDK (`telemetryflow-sdk>=1.2.0`) to provide comprehensive observability:
 
 ### Enable Telemetry
 
@@ -436,6 +526,13 @@ export TELEMETRYFLOW_API_KEY_ID=tfk_your-key-id
 export TELEMETRYFLOW_API_KEY_SECRET=tfs_your-secret-key
 export TELEMETRYFLOW_ENDPOINT=api.telemetryflow.id:4317
 ```
+
+### TFO-Platform Integration
+
+The MCP server integrates with TFO-Platform components for context-aware AI analysis via Python port services:
+
+- **ContextCollector** — Python port of `ContextCollector.service.ts`. Collects live telemetry context from ClickHouse materialized views and PostgreSQL, providing rich operational data for AI analysis across 78 context types in 8 categories
+- **PromptBuilder** — Python port of `PromptBuilder.service.ts`. Builds context-aware system prompts per context type, leveraging 60+ specialized analyst personas and 5 insight types for targeted telemetry analysis
 
 ### Collected Telemetry
 
@@ -467,24 +564,34 @@ telemetryflow-python-mcp/
 │   ├── application/               # Application Layer (CQRS)
 │   │   ├── commands/              # Write operations
 │   │   ├── queries/               # Read operations
-│   │   └── handlers/              # Command/Query handlers
+│   │   ├── handlers/              # Command/Query handlers
+│   │   └── services/              # Application services (ContextCollector, PromptBuilder)
 │   ├── infrastructure/            # Infrastructure Layer
-│   │   ├── claude/                # Claude API client
+│   │   ├── claude/                # LLM API client (12 providers)
 │   │   ├── config/                # Pydantic configuration
 │   │   ├── logging/               # Structured logging
 │   │   ├── persistence/           # Repository implementations
 │   │   └── telemetry/             # TelemetryFlow SDK integration
 │   ├── presentation/              # Presentation Layer
-│   │   ├── server/                # MCP server implementation
-│   │   ├── tools/                 # Built-in tools
+│   │   ├── server/                # MCP server implementation (mcp>=1.27.0)
+│   │   ├── tools/                 # Built-in tools (17 total)
 │   │   ├── resources/             # Built-in resources
 │   │   └── prompts/               # Built-in prompts
 │   └── main.py                    # CLI entry point
 ├── configs/                       # Configuration files
-├── tests/                         # Test suites
+├── tests/                         # Test suites (1174 tests, 98% coverage)
 │   ├── unit/                      # Unit tests
+│   │   ├── domain/                # Domain layer tests
+│   │   ├── application/           # Application layer tests
+│   │   ├── infrastructure/        # Infrastructure layer tests
+│   │   └── presentation/          # Presentation layer tests
 │   ├── integration/               # Integration tests
+│   │   ├── datasource/            # PostgreSQL & ClickHouse tests
+│   │   ├── handlers/              # Handler integration tests
+│   │   └── server/                # Server integration tests
 │   └── e2e/                       # End-to-end tests
+│       ├── protocol/              # MCP protocol tests
+│       └── flow/                  # Full flow tests
 ├── docs/                          # Documentation
 ├── .kiro/                         # Specifications and steering
 ├── Makefile                       # Build automation
@@ -512,10 +619,10 @@ make lint               # Run linters
 make typecheck          # Run mypy type checking
 
 # Testing
-make test               # Run all tests
+make test               # Run all tests (1174 tests)
 make test-unit          # Run unit tests
 make test-integration   # Run integration tests
-make test-cov           # Tests with coverage
+make test-cov           # Tests with coverage (98%)
 
 # CI/CD
 make ci-test            # Full CI test pipeline
@@ -537,7 +644,7 @@ make test
 make test-cov
 
 # Run specific test file
-pytest tests/unit/test_config.py -v
+pytest tests/unit/domain/test_aggregates.py -v
 
 # Run CI test pipeline
 make ci-test
@@ -547,31 +654,44 @@ make ci-test
 
 ## MCP Capabilities Matrix
 
-| Capability              | Status | Description                   |
-| ----------------------- | ------ | ----------------------------- |
-| `tools`                 | ✅     | Tool listing and execution    |
-| `tools.listChanged`     | ✅     | Dynamic tool registration     |
-| `resources`             | ✅     | Resource listing and reading  |
-| `resources.subscribe`   | ✅     | Resource change subscriptions |
-| `resources.listChanged` | ✅     | Dynamic resource registration |
-| `prompts`               | ✅     | Prompt templates              |
-| `prompts.listChanged`   | ✅     | Dynamic prompt registration   |
-| `logging`               | ✅     | Log level management          |
-| `sampling`              | 🔜     | LLM sampling (planned)        |
+> Capabilities are handled internally by the official MCP SDK (`mcp>=1.27.0`).
+
+| Capability              | Status | Description                         |
+| ----------------------- | ------ | ----------------------------------- |
+| `tools`                 | ✅     | Tool listing and execution (SDK)    |
+| `tools.listChanged`     | ✅     | Dynamic tool registration (SDK)     |
+| `resources`             | ✅     | Resource listing and reading (SDK)  |
+| `resources.subscribe`   | ✅     | Resource change subscriptions (SDK) |
+| `resources.listChanged` | ✅     | Dynamic resource registration (SDK) |
+| `prompts`               | ✅     | Prompt templates (SDK)              |
+| `prompts.listChanged`   | ✅     | Dynamic prompt registration (SDK)   |
+| `logging`               | ✅     | Log level management (SDK)          |
+| `sampling`              | 🔜     | LLM sampling (planned)              |
 
 ---
 
-## Claude AI Integration
+## LLM AI Integration
 
-### Supported Models
+### Supported Providers (12 Providers, 111 Models)
 
-| Model             | ID                           | Use Case                       |
-| ----------------- | ---------------------------- | ------------------------------ |
-| Claude 4 Opus     | `claude-opus-4-20250514`     | Complex reasoning, analysis    |
-| Claude 4 Sonnet   | `claude-sonnet-4-20250514`   | Balanced performance (default) |
-| Claude 3.7 Sonnet | `claude-3-7-sonnet-20250219` | Extended thinking              |
-| Claude 3.5 Sonnet | `claude-3-5-sonnet-20241022` | Fast, capable                  |
-| Claude 3.5 Haiku  | `claude-3-5-haiku-20241022`  | Quick responses                |
+| Provider   | Example Models                                | API Key Env Variable        |
+| ---------- | --------------------------------------------- | --------------------------- |
+| Anthropic  | Claude 4 Opus, Claude 4 Sonnet, Claude 3.5    | `ANTHROPIC_API_KEY`         |
+| Google     | Gemini 2.5 Pro, Gemini 2.5 Flash              | `GOOGLE_API_KEY`            |
+| OpenAI     | GPT-4o, GPT-4o-mini, o3, o4-mini             | `OPENAI_API_KEY`            |
+| DeepSeek   | DeepSeek-V3, DeepSeek-R1                      | `DEEPSEEK_API_KEY`          |
+| Qwen       | Qwen3-235B, Qwen3-32B                         | `QWEN_API_KEY`              |
+| Ollama     | llama3, mistral, codellama (local)            | `OLLAMA_HOST`               |
+| Mistral    | Mistral Large, Mistral Medium, Codestral      | `MISTRAL_API_KEY`           |
+| Grok       | grok-3, grok-3-mini                           | `XAI_API_KEY`               |
+| Kimi       | moonshot-v1-128k, moonshot-v1-32k             | `MOONSHOT_API_KEY`          |
+| Zhipu      | GLM-4, GLM-4-Plus, GLM-4-Flash               | `ZHIPU_API_KEY`             |
+| MiMo       | MiMo-7B                                       | `MIMO_API_KEY`              |
+| Custom     | Any OpenAI-compatible endpoint                | `CUSTOM_LLM_API_KEY`        |
+
+### Default Model
+
+The default model is `claude-sonnet-4-20250514` (Anthropic Claude 4 Sonnet), configurable via the `claude.default_model` setting or `TELEMETRYFLOW_MCP_CLAUDE_DEFAULT_MODEL` environment variable.
 
 ---
 
@@ -643,7 +763,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ---
 
 <p align="center">
-  <strong>Built with Python and Claude AI integration for the TelemetryFlow Platform</strong>
+  <strong>Built with Python and multi-provider LLM integration for the TelemetryFlow Platform</strong>
   <br/>
-  <sub>Copyright &copy; 2024-2026 DevOpsCorner Indonesia. All rights reserved.</sub>
+  <sub>Copyright &copy; 2024-2026 Telemetri Data Indonesia. All rights reserved.</sub>
 </p>

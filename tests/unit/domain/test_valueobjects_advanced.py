@@ -298,17 +298,19 @@ class TestModelParametrized:
         "model",
         list(Model),
     )
-    def test_all_models_contain_claude(self, model: Model) -> None:
-        """Verify all model IDs contain 'claude'."""
-        assert "claude" in model.value.lower()
+    def test_all_models_have_valid_ids(self, model: Model) -> None:
+        """Verify all model IDs are non-empty strings."""
+        assert isinstance(model.value, str)
+        assert len(model.value) > 0
 
     @pytest.mark.parametrize(
         "model_name,expected_model",
         [
-            ("claude-sonnet-4-20250514", Model.CLAUDE_4_SONNET),
-            ("claude-opus-4-20250514", Model.CLAUDE_4_OPUS),
-            ("claude-3-5-sonnet-20241022", Model.CLAUDE_35_SONNET),
-            ("claude-3-5-haiku-20241022", Model.CLAUDE_35_HAIKU),
+            ("claude-sonnet-4-20250514", Model.CLAUDE_SONNET_4),
+            ("claude-opus-4-7", Model.CLAUDE_OPUS_4_7),
+            ("gemini-2.5-pro", Model.GEMINI_2_5_PRO),
+            ("gpt-4.1", Model.GPT_4_1),
+            ("deepseek-chat", Model.DEEPSEEK_CHAT),
         ],
     )
     def test_model_values(self, model_name: str, expected_model: Model) -> None:
@@ -316,13 +318,13 @@ class TestModelParametrized:
         assert expected_model.value == model_name
 
     def test_default_model(self) -> None:
-        """Test default model is Claude 4 Sonnet."""
-        assert Model.default() == Model.CLAUDE_4_SONNET
+        """Test default model is Claude Sonnet 4."""
+        assert Model.default() == Model.CLAUDE_SONNET_4
 
     def test_from_string_valid(self) -> None:
         """Test from_string with valid model names."""
         model = Model.from_string("claude-sonnet-4-20250514")
-        assert model == Model.CLAUDE_4_SONNET
+        assert model == Model.CLAUDE_SONNET_4
 
     def test_from_string_invalid_raises(self) -> None:
         """Test from_string raises for invalid model."""

@@ -92,7 +92,7 @@ class TestContentValueObjects:
     def test_model_default(self):
         """Test Model.default."""
         model = Model.default()
-        assert model == Model.CLAUDE_4_SONNET
+        assert model == Model.CLAUDE_SONNET_4
 
     def test_mime_type_from_extension(self):
         """Test MimeType.from_extension."""

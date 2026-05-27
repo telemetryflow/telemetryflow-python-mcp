@@ -44,6 +44,8 @@ cp .env.example .env
 # Edit .env and add your ANTHROPIC_API_KEY
 ```
 
+The synchronized `.env.example` contains **25 configuration sections** aligned with TFO Python-SDK patterns, covering MCP server, LLM, telemetry exporter, datasource, caching, queue, and Docker profile settings.
+
 ## Project Structure
 
 ```
@@ -59,21 +61,36 @@ telemetryflow-python-mcp/
 │   ├── application/      # Application Layer (CQRS)
 │   │   ├── commands/     # Write operations
 │   │   ├── queries/      # Read operations
-│   │   └── handlers/     # Command/Query handlers
+│   │   ├── handlers/     # Command/Query handlers
+│   │   └── services/     # Application services (ContextCollector, PromptBuilder)
 │   ├── infrastructure/   # Infrastructure Layer
-│   │   ├── claude/       # Claude API client
+│   │   ├── claude/       # LLM API client (12 providers)
 │   │   ├── config/       # Configuration management
 │   │   ├── logging/      # Structured logging
 │   │   ├── cache/        # Redis cache (optional)
 │   │   ├── queue/        # NATS queue (optional)
 │   │   └── persistence/  # Repository implementations
 │   ├── presentation/     # Presentation Layer
-│   │   ├── server/       # MCP JSON-RPC server
-│   │   ├── tools/        # Built-in tools
+│   │   ├── server/       # MCP server (official MCP SDK mcp>=1.27.0)
+│   │   ├── tools/        # Built-in tools (17 + ContextCollector + PromptBuilder)
 │   │   ├── resources/    # Built-in resources
 │   │   └── prompts/      # Built-in prompts
 │   └── main.py           # CLI entry point
-├── tests/                # Test suite
+├── tests/                # Test suite (1174 tests, 98% coverage)
+│   ├── unit/             # Unit tests
+│   │   ├── domain/       # Domain layer tests
+│   │   ├── application/  # Application layer tests
+│   │   ├── infrastructure/ # Infrastructure layer tests
+│   │   └── presentation/ # Presentation layer tests
+│   ├── integration/      # Integration tests
+│   │   ├── datasource/   # PostgreSQL & ClickHouse tests
+│   │   ├── handlers/     # Handler integration tests
+│   │   └── server/       # Server integration tests
+│   ├── e2e/              # End-to-end tests
+│   │   ├── protocol/     # MCP protocol tests
+│   │   └── flow/         # Full flow tests
+│   ├── conftest.py       # Shared fixtures
+│   └── __init__.py
 ├── configs/              # Configuration files
 ├── migrations/           # Database migrations
 ├── docs/                 # Documentation
@@ -95,20 +112,52 @@ make run-debug
 tfo-mcp serve -c configs/tfo-mcp.yaml --debug
 ```
 
+### Docker Compose Profiles
+
+The project includes Docker Compose profiles for different development and deployment scenarios:
+
+| Profile         | Services                                                                               | Use Case                    |
+| --------------- | -------------------------------------------------------------------------------------- | --------------------------- |
+| `dev`           | tfo-mcp + tfo-collector                                                                | Development with telemetry  |
+| `full`          | dev + prometheus                                                                       | Full observability stack    |
+| `platform`      | tfo-mcp + postgres + clickhouse + redis + nats + tfo-backend + tfo-viz + tfo-collector | Full TFO Platform           |
+| `analytics`     | clickhouse                                                                             | ClickHouse analytics only   |
+| `observability` | otel-collector + jaeger + prometheus + grafana                                         | Observability visualization |
+
+```bash
+# Development with telemetry
+docker-compose --profile dev up -d
+
+# Full observability stack
+docker-compose --profile full up -d
+
+# Full TFO Platform
+docker-compose --profile platform up -d
+
+# ClickHouse analytics only
+docker-compose --profile analytics up -d
+
+# Observability visualization
+docker-compose --profile observability up -d
+```
+
 ### Running Tests
 
 ```bash
-# All tests
+# All tests (1174 tests)
 make test
 
-# With coverage
+# With coverage (98%)
 make test-cov
 
+# Specific test directory
+pytest tests/unit/domain/ -v
+
 # Specific test file
-pytest tests/unit/test_domain.py -v
+pytest tests/unit/domain/test_aggregates.py -v
 
 # Specific test
-pytest tests/unit/test_domain.py::TestSession::test_create_session -v
+pytest tests/unit/domain/test_aggregates.py::TestSession::test_create_session -v
 ```
 
 ### Code Quality
@@ -123,6 +172,18 @@ make format
 # Type checking
 mypy src
 ```
+
+## Application Services
+
+The `application/services/` directory contains application-level service classes that encapsulate cross-cutting concerns:
+
+### ContextCollector
+
+Collects and assembles telemetry context from multiple data sources, providing a unified view of observability data for prompt generation.
+
+### PromptBuilderService
+
+Builds system prompts and context prompts for LLM interactions, supporting 40+ specialized context types (metrics, logs, traces, alerts, Kubernetes resources, infrastructure, IAM, tenancy, database monitoring, etc.) with configurable system instructions and insight generation modes (chronology, prediction, recommendation, root-cause, pattern).
 
 ## Adding a New Tool
 
@@ -142,15 +203,15 @@ async def _my_tool_handler(input_data: dict[str, Any]) -> ToolResult:
     return ToolResult.text(result)
 ```
 
-### 2. Add to BUILTIN_TOOLS
+### 2. Register with the MCP Server
 
 ```python
-BUILTIN_TOOLS.append({
-    "name": "my_tool",
-    "description": "Description of my tool",
-    "category": "utility",
-    "tags": ["my", "tool"],
-    "input_schema": {
+# src/tfo_mcp/presentation/server/tool_registration.py
+
+server.register_tool(
+    name="my_tool",
+    description="Description of my tool",
+    input_schema={
         "type": "object",
         "properties": {
             "param": {
@@ -160,14 +221,14 @@ BUILTIN_TOOLS.append({
         },
         "required": ["param"],
     },
-    "handler": _my_tool_handler,
-})
+    handler=_my_tool_handler,
+)
 ```
 
 ### 3. Add Tests
 
 ```python
-# tests/unit/test_tools.py
+# tests/unit/presentation/test_my_tool.py
 
 class TestMyTool:
     @pytest.mark.asyncio
@@ -199,20 +260,18 @@ async def _my_resource_reader(uri: str, params: dict[str, str]) -> ResourceConte
     )
 ```
 
-### 2. Register in register_builtin_resources
+### 2. Register with the MCP Server
 
 ```python
-def register_builtin_resources(session: "Session", config: "Config") -> None:
-    # ... existing resources ...
+# src/tfo_mcp/presentation/server/resource_registration.py
 
-    my_resource = Resource.create(
-        uri="my://resource",
-        name="My Resource",
-        description="Description",
-        mime_type=MimeType.APPLICATION_JSON,
-        reader=_my_resource_reader,
-    )
-    session.register_resource(my_resource)
+server.register_resource(
+    uri="my://resource",
+    name="My Resource",
+    description="Description",
+    mime_type="application/json",
+    reader=_my_resource_reader,
+)
 ```
 
 ## Adding a New Prompt
@@ -234,25 +293,23 @@ async def _my_prompt_generator(args: dict[str, str]) -> list[PromptMessage]:
     ]
 ```
 
-### 2. Register in register_builtin_prompts
+### 2. Register with the MCP Server
 
 ```python
-def register_builtin_prompts(session: "Session") -> None:
-    # ... existing prompts ...
+# src/tfo_mcp/presentation/server/prompt_registration.py
 
-    my_prompt = Prompt.create(
-        name="my_prompt",
-        description="My prompt description",
-        arguments=[
-            PromptArgument(
-                name="topic",
-                description="The topic",
-                required=True,
-            ),
-        ],
-        generator=_my_prompt_generator,
-    )
-    session.register_prompt(my_prompt)
+server.register_prompt(
+    name="my_prompt",
+    description="My prompt description",
+    arguments=[
+        {
+            "name": "topic",
+            "description": "The topic",
+            "required": True,
+        },
+    ],
+    generator=_my_prompt_generator,
+)
 ```
 
 ## Architecture Guidelines
@@ -269,6 +326,7 @@ def register_builtin_prompts(session: "Session") -> None:
 1. **Commands change state** - One command, one change
 2. **Queries are read-only** - No side effects
 3. **Handlers are thin** - Orchestrate, don't implement logic
+4. **Services encapsulate cross-cutting concerns** - ContextCollector and PromptBuilder coordinate across domain boundaries
 
 ### Infrastructure Layer Rules
 
@@ -278,22 +336,44 @@ def register_builtin_prompts(session: "Session") -> None:
 
 ### Presentation Layer Rules
 
-1. **Protocol handling only** - JSON-RPC parsing, validation
+1. **Use official MCP SDK** - `mcp>=1.27.0` for protocol handling
 2. **Delegate to application layer** - Don't implement business logic
 3. **Tools are self-contained** - Each tool is independent
 
 ## Testing Guidelines
 
+### Test Organization (DDD-Aligned)
+
+Tests are organized to mirror the domain structure:
+
+```
+tests/
+├── unit/                          # Unit tests (isolated)
+│   ├── domain/                    # Domain layer
+│   ├── application/               # Application layer (including services/)
+│   ├── infrastructure/            # Infrastructure layer
+│   └── presentation/              # Presentation layer
+├── integration/                   # Integration tests
+│   ├── datasource/                # PostgreSQL & ClickHouse
+│   ├── handlers/                  # Handler integration
+│   └── server/                    # Server integration
+└── e2e/                           # End-to-end tests
+    ├── protocol/                  # MCP protocol
+    └── flow/                      # Full flow
+```
+
 ### Unit Tests
 
 - Test domain entities and value objects
 - Test tool handlers in isolation
+- Test application services (ContextCollector, PromptBuilder)
 - Mock external dependencies
 
 ### Integration Tests
 
 - Test handler integration
 - Test server request handling
+- Test PostgreSQL and ClickHouse datasource tools
 - Use in-memory repositories
 
 ### End-to-End Tests
@@ -304,7 +384,7 @@ def register_builtin_prompts(session: "Session") -> None:
 
 ## Release Process
 
-1. Update version in `pyproject.toml` and `src/tfo_mcp/__init__.py`
+1. Update version in `pyproject.toml` and `src/tfo_mcp/__init__.py` (current: 1.2.0)
 2. Update CHANGELOG.md
 3. Create release commit
 4. Tag release

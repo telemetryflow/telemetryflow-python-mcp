@@ -298,23 +298,37 @@ class TestRole:
 class TestModel:
     """Test Model enum."""
 
-    def test_claude_4_opus(self):
-        """Test Claude 4 Opus model."""
-        assert "opus" in Model.CLAUDE_4_OPUS.value
+    def test_claude_opus_4_7(self):
+        assert "opus" in Model.CLAUDE_OPUS_4_7.value
 
-    def test_claude_4_sonnet(self):
-        """Test Claude 4 Sonnet model."""
-        assert "sonnet" in Model.CLAUDE_4_SONNET.value
+    def test_claude_sonnet_4(self):
+        assert "sonnet" in Model.CLAUDE_SONNET_4.value
 
     def test_default_model(self):
-        """Test default model."""
         default = Model.default()
-        assert default == Model.CLAUDE_4_SONNET
+        assert default == Model.CLAUDE_SONNET_4
 
-    def test_model_ids(self):
-        """Test model IDs are valid."""
-        for model in Model:
-            assert "claude" in model.value.lower()
+    def test_model_count(self):
+        assert len(Model) >= 111
+
+    def test_all_providers_represented(self):
+        provider_prefixes = [
+            "claude-",
+            "gemini-",
+            "gpt-",
+            "o3",
+            "deepseek-",
+            "qwen",
+            "mistral-",
+            "grok-",
+            "kimi-",
+            "moonshot-",
+            "glm-",
+            "mimo-",
+        ]
+        model_values = [m.value for m in Model]
+        for prefix in provider_prefixes:
+            assert any(prefix in v for v in model_values), f"No model found with prefix '{prefix}'"
 
 
 class TestContentType:
