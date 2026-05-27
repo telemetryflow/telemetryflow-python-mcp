@@ -181,7 +181,7 @@ jobs:
           # =============================================================================
           FROM python:3.12-slim AS builder
 
-          ARG VERSION=2.0.0
+          ARG VERSION=1.2.0
           ARG GIT_COMMIT=unknown
           ARG BUILD_TIME=unknown
 
@@ -205,7 +205,7 @@ jobs:
           # =============================================================================
           FROM python:3.12-slim
 
-          ARG VERSION=2.0.0
+          ARG VERSION=1.2.0
 
           # CVE patching and minimal runtime deps
           RUN apt-get update && \

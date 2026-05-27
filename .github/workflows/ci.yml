@@ -12,7 +12,7 @@
 # - Code coverage (via Makefile)
 #
 # Compatible with TFO-Collector v1.2.1
-# MCP SDK: mcp>=1.27.0 | TFO Python SDK: telemetryflow-sdk>=1.2.0
+# MCP SDK: mcp>=1.27.0 | TFO Python SDK: telemetryflow-python-sdk>=1.2.0
 #
 # =============================================================================
 
@@ -58,7 +58,7 @@ on:
 env:
   PYTHON_VERSION: '3.12'
   PRODUCT_NAME: TelemetryFlow Python MCP Server
-  VERSION: '2.0.0'
+  VERSION: '1.2.0'
   MCP_PROTOCOL_VERSION: '2024-11-05'
   MCP_SDK_VERSION: '1.27.0'
   TFO_SDK_VERSION: '1.2.0'
@@ -319,7 +319,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### MCP Server Features Tested:" >> $GITHUB_STEP_SUMMARY
             echo "- MCP Protocol: ${{ env.MCP_PROTOCOL_VERSION }} (SDK: mcp>=${{ env.MCP_SDK_VERSION }})" >> $GITHUB_STEP_SUMMARY
-            echo "- TFO Python SDK: telemetryflow-sdk>=${{ env.TFO_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- TFO Python SDK: telemetryflow-python-sdk>=${{ env.TFO_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
             echo "- TFO PostgreSQL datasource tools" >> $GITHUB_STEP_SUMMARY
             echo "- TFO ClickHouse analytics tools" >> $GITHUB_STEP_SUMMARY
             echo "- Built-in tools (8), resources (3), prompts (3)" >> $GITHUB_STEP_SUMMARY
@@ -342,7 +342,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**MCP Protocol Version:** ${{ env.MCP_PROTOCOL_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "**MCP SDK:** mcp>=${{ env.MCP_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "**TFO Python SDK:** telemetryflow-sdk>=${{ env.TFO_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**TFO Python SDK:** telemetryflow-python-sdk>=${{ env.TFO_SDK_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
