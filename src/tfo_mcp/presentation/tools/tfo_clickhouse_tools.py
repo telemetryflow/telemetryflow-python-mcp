@@ -135,26 +135,20 @@ async def _ch_tool_analytics_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _ch_session_analytics_handler(input_data: dict[str, Any]) -> ToolResult:
-    hours = input_data.get("hours", 168)
-    limit = input_data.get("limit", 50)
+    hours = int(input_data.get("hours", 168))
+    limit = int(input_data.get("limit", 50))
 
-    query = f"""
-        SELECT
-            session_id,
-            client_name,
-            duration_seconds,
-            tool_calls_count,
-            api_calls_count,
-            total_input_tokens,
-            total_output_tokens,
-            errors_count,
-            created_at,
-            closed_at
-        FROM session_analytics
-        WHERE created_at >= now() - INTERVAL {int(hours)} HOUR
-        ORDER BY created_at DESC
-        LIMIT {int(limit)}
-    """
+    query = (
+        "SELECT "
+        "session_id, client_name, duration_seconds, "
+        "tool_calls_count, api_calls_count, "
+        "total_input_tokens, total_output_tokens, "
+        "errors_count, created_at, closed_at "
+        "FROM session_analytics "
+        f"WHERE created_at >= now() - INTERVAL {hours} HOUR "
+        f"ORDER BY created_at DESC "
+        f"LIMIT {limit}"
+    )
 
     return await _ch_query_handler(
         {
@@ -166,23 +160,22 @@ async def _ch_session_analytics_handler(input_data: dict[str, Any]) -> ToolResul
 
 
 async def _ch_error_analytics_handler(input_data: dict[str, Any]) -> ToolResult:
-    hours = input_data.get("hours", 72)
-    limit = input_data.get("limit", 50)
+    hours = int(input_data.get("hours", 72))
+    limit = int(input_data.get("limit", 50))
 
-    query = f"""
-        SELECT
-            error_type,
-            error_code,
-            count() AS error_count,
-            any(error_message) AS sample_message,
-            min(created_at) AS first_seen,
-            max(created_at) AS last_seen
-        FROM error_analytics
-        WHERE created_at >= now() - INTERVAL {int(hours)} HOUR
-        GROUP BY error_type, error_code
-        ORDER BY error_count DESC
-        LIMIT {int(limit)}
-    """
+    query = (
+        "SELECT "
+        "error_type, error_code, "
+        "count() AS error_count, "
+        "any(error_message) AS sample_message, "
+        "min(created_at) AS first_seen, "
+        "max(created_at) AS last_seen "
+        "FROM error_analytics "
+        f"WHERE created_at >= now() - INTERVAL {hours} HOUR "
+        "GROUP BY error_type, error_code "
+        "ORDER BY error_count DESC "
+        f"LIMIT {limit}"
+    )
 
     return await _ch_query_handler(
         {
@@ -194,29 +187,29 @@ async def _ch_error_analytics_handler(input_data: dict[str, Any]) -> ToolResult:
 
 
 async def _ch_api_usage_handler(input_data: dict[str, Any]) -> ToolResult:
-    hours = input_data.get("hours", 168)
+    hours = int(input_data.get("hours", 168))
     model = input_data.get("model")
-    limit = input_data.get("limit", 50)
+    limit = int(input_data.get("limit", 50))
 
     model_filter = f" AND model = '{model}'" if model else ""
 
-    query = f"""
-        SELECT
-            model,
-            count() AS total_calls,
-            sum(input_tokens) AS total_input_tokens,
-            sum(output_tokens) AS total_output_tokens,
-            sum(total_tokens) AS total_tokens,
-            round(avg(duration_ms), 2) AS avg_duration_ms,
-            sum(success) AS success_count,
-            count() - sum(success) AS error_count
-        FROM api_usage
-        WHERE created_at >= now() - INTERVAL {int(hours)} HOUR
-        {model_filter}
-        GROUP BY model
-        ORDER BY total_calls DESC
-        LIMIT {int(limit)}
-    """
+    query = (
+        "SELECT "
+        "model, "
+        "count() AS total_calls, "
+        "sum(input_tokens) AS total_input_tokens, "
+        "sum(output_tokens) AS total_output_tokens, "
+        "sum(total_tokens) AS total_tokens, "
+        "round(avg(duration_ms), 2) AS avg_duration_ms, "
+        "sum(success) AS success_count, "
+        "count() - sum(success) AS error_count "
+        "FROM api_usage "
+        f"WHERE created_at >= now() - INTERVAL {hours} HOUR "
+        f"{model_filter} "
+        "GROUP BY model "
+        "ORDER BY total_calls DESC "
+        f"LIMIT {limit}"
+    )
 
     return await _ch_query_handler(
         {

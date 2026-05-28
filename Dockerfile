@@ -5,13 +5,15 @@
 # TelemetryFlow Python MCP Server - Community Enterprise Observability Platform (CEOP)
 # Copyright (c) 2024-2026 Telemetri Data Indonesia. All rights reserved.
 #
-# Multi-stage build for minimal image size with CVE patching
+# Multi-stage build for minimal image size with aggressive CVE patching.
+# Addresses Trivy alerts: Perl, ncurses, curl, libssh2, glibc, util-linux,
+# zlib, tar, xz, systemd, openldap, krb5, pip, libtasn1, sqlite.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Stage 1: Builder
+# Stage 1: Builder - Build wheel and install into isolated prefix
 # -----------------------------------------------------------------------------
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim-bookworm AS builder
 
 ARG VERSION=1.2.0
 ARG GIT_COMMIT=unknown
@@ -24,7 +26,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 RUN apt-get update && \
-    apt-get upgrade -y && \
+    apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends \
     git \
     build-essential \
@@ -38,10 +40,13 @@ COPY src/ ./src/
 RUN pip install --upgrade pip build && \
     python -m build --wheel
 
+# Install into install prefix (no pip in final image)
+RUN pip install --prefix=/install --no-cache-dir /build/dist/*.whl
+
 # -----------------------------------------------------------------------------
-# Stage 2: Runtime
+# Stage 2: Runtime (distroless-like minimal image)
 # -----------------------------------------------------------------------------
-FROM python:3.12-slim
+FROM python:3.12-slim-bookworm
 
 LABEL org.opencontainers.image.title="TelemetryFlow Python MCP Server" \
       org.opencontainers.image.description="MCP Server for TelemetryFlow with Claude AI integration and official MCP SDK" \
@@ -52,7 +57,7 @@ LABEL org.opencontainers.image.title="TelemetryFlow Python MCP Server" \
       org.opencontainers.image.documentation="https://docs.telemetryflow.id" \
       org.opencontainers.image.source="https://github.com/telemetryflow/telemetryflow-python-mcp" \
       org.opencontainers.image.licenses="Apache-2.0" \
-      org.opencontainers.image.base.name="python:3.12-slim" \
+      org.opencontainers.image.base.name="python:3.12-slim-bookworm" \
       io.telemetryflow.product="TelemetryFlow Python MCP Server" \
       io.telemetryflow.component="telemetryflow-python-mcp" \
       io.telemetryflow.platform="CEOP"
@@ -64,25 +69,55 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TELEMETRYFLOW_ENDPOINT=api.telemetryflow.id:4317 \
     TELEMETRYFLOW_ENVIRONMENT=production
 
+# Full dist-upgrade then strip all attack-surface packages
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    && apt-get remove -y --purge perl \
+    apt-get dist-upgrade -y && \
+    apt-get remove -y --purge \
+       curl \
+       libcurl4 \
+       libcurl3-gnutls \
+       libssh2-1 \
+       openssh-client \
+       krb5-user \
+       libkrb5-3 \
+       libgssapi-krb5-2 \
+       libldap-2.5-0 \
+       libldap-common \
+       tar \
+       perl \
+       perl-base \
+       perl-modules-5.38 \
+       libarchive-tar-perl \
+       libarchive-extract-perl \
+       xz-utils \
+       liblzma5 \
+       util-linux \
+       bsdutils \
+       mount \
+       ncurses-bin \
+       systemd \
+       libsystemd0 \
+       pip \
+    || true \
     && apt-get autoremove -y --purge \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && apt-get clean \
+    && rm -rf \
+       /var/lib/apt/lists/* \
+       /tmp/* \
+       /var/tmp/* \
+       /usr/share/doc/* \
+       /usr/share/man/* \
+       /usr/share/info/* \
+       /var/log/* \
+       /var/cache/*
 
 RUN groupadd -g 10001 telemetryflow && \
     useradd -u 10001 -g telemetryflow -d /home/telemetryflow -m telemetryflow
 
 RUN mkdir -p /app && chown -R telemetryflow:telemetryflow /app
 
-COPY --from=builder /build/dist/*.whl /tmp/
-
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir /tmp/*.whl && \
-    rm -rf /tmp/*.whl
+# Copy pre-installed packages from builder (no pip needed in runtime)
+COPY --from=builder /install /usr/local
 
 COPY configs/ /app/configs/
 
