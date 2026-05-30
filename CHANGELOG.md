@@ -124,6 +124,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Dockerfile CVE patching, OCI labels, non-root user
+- Aggressive removal of vulnerable system packages: gnupg, gpg, gpgv, dirmngr, libldap, libcurl, curl, binutils, ncurses, perl
+- Explicit cleanup of residual shared libraries (libgcrypt, libsasl2)
+- Resolved all Critical and High Trivy vulnerabilities (zlib CVE, sqlite CVE, openldap CVE, PAM CVEs, ncurses CVEs, GnuPG CVEs)
 
 ### Test Coverage
 
